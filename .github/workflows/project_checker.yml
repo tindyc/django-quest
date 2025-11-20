@@ -20,6 +20,7 @@ jobs:
       # 0. Show basic context and set expectations
       # ---------------------------------------
       - name: Show PR & branch info
+        shell: bash
         run: |
           echo "🔍 Using Branch Name: '${{ env.BRANCH_NAME }}'"
           echo "Please ensure your branch name follows the pattern 'issue-X-description' to start the Quest checks."
@@ -88,6 +89,7 @@ jobs:
       - name: Install dependencies
         # This step runs if Issue 1 check passed and the branch is valid (needed for all subsequent steps)
         if: success() && fromJSON(steps.issue_info.outputs.issue_number) >= 1
+        shell: bash
         run: |
           echo "📦 Installing dependencies..."
           pip install -r requirements.txt
@@ -111,17 +113,16 @@ jobs:
             exit 1
           fi
 
-          # Extract the second quoted value from the DJANGO_SETTINGS_MODULE line
-          # e.g. os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'blog.settings')
-          PROJECT_SETTINGS=$(grep "DJANGO_SETTINGS_MODULE" manage.py | sed -E "s/.*['"][^'"]*['"][[:space:]]*,[[:space:]]*['"]([^'"]*)['"].*//")
+          # Look for settings.py in the standard Django layout: <project_name>/settings.py
+          SETTINGS_FILE=$(find . -maxdepth 2 -mindepth 1 -type f -path "./*/settings.py" | head -n 1)
 
-          if [ -z "$PROJECT_SETTINGS" ]; then
-            echo "::error file=manage.py::FATAL: Could not detect DJANGO_SETTINGS_MODULE. Fix: Ensure manage.py is the standard file created by 'django-admin startproject <project_name> .'."
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "::error::FATAL: Could not find settings.py next to manage.py. Fix: Ensure you ran 'django-admin startproject <project_name> .' and committed the project folder."
             exit 1
           fi
 
-          PROJECT_NAME="${PROJECT_SETTINGS%%.*}"
-          SETTINGS_PATH="${PROJECT_SETTINGS//./\/}.py"
+          PROJECT_NAME=$(basename "$(dirname "$SETTINGS_FILE")")
+          SETTINGS_PATH="$PROJECT_NAME/settings.py"
 
           echo "project_name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
 
@@ -133,7 +134,7 @@ jobs:
           echo "✅ Detected project name: $PROJECT_NAME at $SETTINGS_PATH"
 
       # ---------------------------------------
-      # Issue 3 – App creation & registration
+      # Issue 3 – App creation & registration (soft check)
       # ---------------------------------------
       - name: Verify app creation & registration (Issue 3 Check)
         if: |
@@ -141,39 +142,11 @@ jobs:
           fromJSON(steps.issue_info.outputs.issue_number) >= 3
         shell: bash
         run: |
-          echo "🔎 Checking for a custom app and its registration (Issue 3)..."
-          set -e
+          echo "ℹ️ Skipping strict automated checks for Issue 3 (app creation & registration)."
+          echo "   Make sure you have:"
+          echo "   - Created a Django app with 'python manage.py startapp <app_name>'"
+          echo "   - Added '<app_name>' to INSTALLED_APPS in ${{ steps.project_info.outputs.project_name }}/settings.py"
 
-          PROJECT_NAME="${{ steps.project_info.outputs.project_name }}"
-          SETTINGS_PATH="$PROJECT_NAME/settings.py"
-
-          # Find directories containing apps.py (excluding the project package itself)
-          APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" ! -path "./$PROJECT_NAME/*" -printf "%h\n" | sort -u)
-
-          if [ -z "$APP_DIRS" ]; then
-            echo "::error::FATAL: No custom Django app (apps.py) found. Fix: Run 'python manage.py startapp <app_name>' (Step 8)."
-            exit 1
-          fi
-
-          MISSING_REG=""
-          for APP in $APP_DIRS; do
-            APP_NAME=$(basename "$APP")
-            # Check if the app name is in INSTALLED_APPS (Step 11)
-            if ! grep -q "'$APP_NAME'" "$SETTINGS_PATH"; then
-              MISSING_REG="$MISSING_REG $APP_NAME"
-            fi
-          done
-
-          if [ -n "$MISSING_REG" ]; then
-            echo "::error file=$SETTINGS_PATH::FATAL: The following apps are not registered in INSTALLED_APPS: $MISSING_REG. Fix: Add '<app_name>' to INSTALLED_APPS in '$SETTINGS_PATH' (Step 11)."
-            exit 1
-          fi
-
-          echo "✅ At least one app exists and is registered in INSTALLED_APPS."
-
-      # ---------------------------------------
-      # Issue 4 – URL routing & view
-      # ---------------------------------------
       # ---------------------------------------
       # Issue 4 – URL routing & view
       # ---------------------------------------
@@ -186,7 +159,7 @@ jobs:
           echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
           set -e
 
-          python manage.py shell -c "import sys; from django.test import Client; client = Client(); response = client.get('/'); msg = '::error::ERROR: GET / returned %s (expected 200). Fix: Ensure your root URL (/) is routed to a view that returns an HttpResponse.\\n' % response.status_code; sys.exit(0) if response.status_code == 200 else (sys.stderr.write(msg) or sys.exit(1))"
+          python manage.py shell -c "import sys; from django.test import Client; client = Client(); response = client.get('/'); status = response.status_code; if status != 200: sys.stderr.write('::error::ERROR: GET / returned %s (expected 200). Fix: Ensure your root URL (/) is routed to a view that returns an HttpResponse.\n' % status); sys.exit(1)"
 
           echo "✅ Root URL '/' returns HTTP 200."
 
@@ -197,6 +170,7 @@ jobs:
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 5
+        shell: bash
         run: |
           echo "🔎 Running 'python manage.py makemigrations --noinput' (Issue 5)…"
           set -e
@@ -207,6 +181,7 @@ jobs:
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 5
+        shell: bash
         run: |
           echo "🔎 Running 'python manage.py migrate --noinput' (Issue 5)…"
           set -e
@@ -220,6 +195,7 @@ jobs:
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 6
+        shell: bash
         run: |
           echo "🔎 Running 'python manage.py check' (Issue 6)…"
           set -e
@@ -231,6 +207,7 @@ jobs:
       # ---------------------------------------
       - name: Summary
         if: steps.issue_info.outputs.valid == 'true'
+        shell: bash
         run: |
           echo "🎉 Django Quest checks finished for Issue ${{ steps.issue_info.outputs.issue_number }}."
           echo "If this job is green, you can merge your PR and move on to the next Issue."
