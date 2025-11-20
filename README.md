@@ -389,3 +389,5 @@ Good luck — may your migrations always succeed and your debugging be swift! �
 ---
 
 *Happy Coding!* 💚
+
+Author: Tindy
