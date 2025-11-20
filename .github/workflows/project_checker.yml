@@ -188,6 +188,9 @@ PY
       # ---------------------------------------
       # Issue 4 – URL routing & view
       # ---------------------------------------
+# ---------------------------------------
+      # Issue 4 – URL routing & view
+      # ---------------------------------------
       - name: Verify root URL '/' returns HTTP 200 (Issue 4 Check)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
@@ -197,27 +200,25 @@ PY
           echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
           set -e
 
-          python manage.py shell << 'PY'
+          python manage.py shell -c "
 import sys
 from django.test import Client
 from django.urls import resolve
 
 try:
-    resolve("/")
+    resolve('/')
 except Exception as e:
-    sys.stderr.write("::error::ERROR: Could not resolve root URL '/'. Fix: Check project urls.py includes path('', include('<app_name>.urls')). Details: %s
-" % e)
+    # Use double quotes for the shell command, so use single quotes inside
+    sys.stderr.write('::error::ERROR: Could not resolve root URL /... Fix: Check project urls.py includes path(\'\', include(\'<app_name>.urls\')). Details: %s\\n' % e)
     sys.exit(1)
 
 client = Client()
-response = client.get("/")
+response = client.get('/')
 
 if response.status_code != 200:
-    sys.stderr.write("::error::ERROR: GET '/' returned %s (expected 200). Fix: Ensure your view returns an HttpResponse.
-" % response.status_code)
+    sys.stderr.write('::error::ERROR: GET / returned %s (expected 200). Fix: Ensure your view returns an HttpResponse.\\n' % response.status_code)
     sys.exit(1)
-PY
-
+"
           echo "✅ Root URL '/' returns HTTP 200."
       # ---------------------------------------
       # Issue 5 – Models & migrations
