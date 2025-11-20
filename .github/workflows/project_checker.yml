@@ -3,27 +3,18 @@ name: Django Setup Quest Checker
 on: pull_request
 
 env:
-  # The source branch name (e.g., "issue-3-create-app").
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
   check_django_setup:
-    # Filter the job to run only for PRs targeting 'main' that are open/updated
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.action != 'closed' &&
-      github.base_ref == 'refs/heads/main'
-      
+    # This filter forces the job to run only for PRs targeting 'main'
+    if: github.base_ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      # ---------------------------------------
-      # 0. Show basic context and set expectations
-      # ---------------------------------------
       - name: Show PR & branch info
         run: |
           echo "🔍 Using Branch Name: '${{ env.BRANCH_NAME }}'"
-          echo "Please ensure your branch name follows the pattern 'issue-X-description' to start the Quest checks."
 
       # ------------------------------------------------
       # 1. Determine which Issue this branch belongs to
@@ -33,7 +24,6 @@ jobs:
         shell: bash
         run: |
           BRANCH="${{ env.BRANCH_NAME }}"
-          # Use regex to validate branch name structure and extract the issue number
           if [[ "$BRANCH" =~ ^issue-([1-6])-.+ ]]; then
             ISSUE="${BASH_REMATCH[1]}"
             echo "✅ Detected Issue Branch: Issue $ISSUE"
@@ -41,7 +31,7 @@ jobs:
             echo "issue_number=$ISSUE" >> "$GITHUB_OUTPUT"
           else
             echo "⚠️ Branch name does NOT match expected pattern 'issue-X-description'."
-            echo "::notice::No Quest checks ran. Rename your branch (e.g., issue-3-create-app) to proceed."
+            echo "::notice::No Quest checks ran."
             echo "valid=false" >> "$GITHUB_OUTPUT"
             echo "issue_number=0" >> "$GITHUB_OUTPUT"
           fi
@@ -86,7 +76,6 @@ jobs:
           echo "✅ requirements.txt exists and contains Django."
 
       - name: Install dependencies
-        # This step runs if Issue 1 check passed and the branch is valid (needed for all subsequent steps)
         if: success() && fromJSON(steps.issue_info.outputs.issue_number) >= 1
         run: |
           echo "📦 Installing dependencies..."
@@ -111,7 +100,6 @@ jobs:
             exit 1
           fi
 
-          # FIX: Simplify settings detection logic to avoid complex regex issues
           PROJECT_SETTINGS=$(grep 'DJANGO_SETTINGS_MODULE' manage.py | grep -o "\'.*\'" | tr -d "'")
           
           if [ -z "$PROJECT_SETTINGS" ]; then
@@ -145,7 +133,6 @@ jobs:
           echo "🔎 Checking for a custom app and its registration (Issue 3)..."
           set -e
 
-          # Find directories with apps.py (excluding the project settings folder itself)
           APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h\n" | sed 's|^\./||' | sort -u)
 
           if [ -z "$APP_DIRS" ]; then
@@ -156,7 +143,6 @@ jobs:
           MISSING_REG=""
           for APP in $APP_DIRS; do
             APP_NAME=$(basename "$APP")
-            # Check if the app name is in INSTALLED_APPS (Step 11)
             if ! grep -q "'$APP_NAME'" "$SETTINGS_PATH"; then
               MISSING_REG="$MISSING_REG $APP_NAME"
             fi
@@ -170,7 +156,7 @@ jobs:
           echo "✅ At least one app exists and is registered in INSTALLED_APPS."
 
       # ---------------------------------------
-      # Issue 4 – URL routing & view (Final Safe Fix)
+      # Issue 4 – URL routing & view (Single-line shell command fix)
       # ---------------------------------------
       - name: Verify root URL '/' returns HTTP 200 (Issue 4 Check)
         if: |
@@ -179,9 +165,8 @@ jobs:
         shell: bash
         run: |
           echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
-          set -e # Stop bash script on error
+          set -e
           
-          # FINAL SAFE FIX: Using a single, clean Python command to avoid multi-line YAML parsing errors.
           python manage.py shell -c "import sys; from django.test import Client; from django.urls import resolve; try: resolve('/'); except Exception as e: sys.stderr.write('::error::ERROR: Could not resolve root URL \"/\". Fix: Check urls.py includes (Step 10). Details: %s\n' % e); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write('::error::ERROR: GET \"/\" returned %s (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n' % response.status_code); sys.exit(1);"
           
           echo "✅ Root URL '/' returns HTTP 200." 
