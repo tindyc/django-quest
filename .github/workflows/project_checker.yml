@@ -108,17 +108,26 @@ jobs:
             exit 1
           fi
 
-          # Detect settings path and project name using Django's default manage.py pattern
-          PROJECT_SETTINGS=$(grep -o "os.environ.setdefault(.*['\"][^'\"]*['\"]" manage.py | sed -E "s/.*['\"](.*)['\"]/\1/")
+          # ---------------------------------------------------------------------
+          # FIX: Simplify settings detection logic to avoid complex regex issues
+          # ---------------------------------------------------------------------
+          PROJECT_SETTINGS=$(grep 'DJANGO_SETTINGS_MODULE' manage.py | grep -o "\'.*\'" | tr -d "'")
+          
+          if [ -z "$PROJECT_SETTINGS" ]; then
+             echo "::error file=manage.py::FATAL: Could not extract DJANGO_SETTINGS_MODULE. Fix: Ensure manage.py is standard."
+             exit 1
+          fi
+          
           PROJECT_NAME=$(echo "$PROJECT_SETTINGS" | sed 's/\..*//')
           SETTINGS_PATH=$(echo "$PROJECT_SETTINGS" | sed 's/\./\//g').py
 
           echo "project_name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
 
-          if [ -z "$PROJECT_SETTINGS" ] || [ ! -f "$SETTINGS_PATH" ]; then
-            echo "::error file=$SETTINGS_PATH::FATAL: settings.py not found at $SETTINGS_PATH. Fix: Make sure you created your Django project in the repo root with 'django-admin startproject <project_name> .' and committed the project folder '$PROJECT_NAME'."
+          if [ ! -f "$SETTINGS_PATH" ]; then
+            echo "::error file=$SETTINGS_PATH::FATAL: settings.py not found at $SETTINGS_PATH. Fix: Commit the project folder '$PROJECT_NAME' created by 'django-admin startproject'."
             exit 1
           fi
+          # ---------------------------------------------------------------------
 
           echo "✅ Detected project name: $PROJECT_NAME at $SETTINGS_PATH"
 
@@ -137,8 +146,7 @@ jobs:
           set -e
 
           # Find directories with apps.py (excluding the project settings folder itself)
-          APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h
-" | sed 's|^\./||' | sort -u)
+          APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h\n" | sed 's|^\./||' | sort -u)
 
           if [ -z "$APP_DIRS" ]; then
             echo "::error::FATAL: No custom Django app (apps.py) found. Fix: Run 'python manage.py startapp <app_name>' (Step 8)."
@@ -171,11 +179,11 @@ jobs:
         shell: bash
         run: |
           echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
-          set -e
-
+          set -e # Stop bash script on error
+          
           # Consolidated Python script into a single shell command to avoid multi-line YAML parsing errors.
-          python manage.py shell -c "from django.test import Client; from django.urls import resolve; import sys; try: resolve('/'); except Exception as e: sys.stderr.write(f'::error::ERROR: Could not resolve root URL "/". Fix: Check urls.py includes (Step 10). Details: {e}\n'); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write(f'::error::ERROR: GET "/" returned {response.status_code} (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n'); sys.exit(1);"
-
+          python manage.py shell -c "from django.test import Client; from django.urls import resolve; import sys; try: resolve('/'); except Exception as e: sys.stderr.write(f'::error::ERROR: Could not resolve root URL \"/\". Fix: Check urls.py includes (Step 10). Details: {e}\n'); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write(f'::error::ERROR: GET \"/\" returned {response.status_code} (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n'); sys.exit(1);"
+          
           echo "✅ Root URL '/' returns HTTP 200." 
 
       # ---------------------------------------
