@@ -7,6 +7,12 @@ on:
 jobs:
   open_next_issue:
     runs-on: ubuntu-latest
+    
+    # REQUIRED FIX: Explicitly grant write access to issues
+    permissions:
+      contents: read # Read access is usually sufficient for files
+      issues: write  # Crucial for creating the new Issue
+      
     outputs:
       finish_quest: ${{ steps.next.outputs.finish_quest }}
 
@@ -16,7 +22,7 @@ jobs:
           echo "Closed issue: #${{ github.event.issue.number }}"
           echo "Title: ${{ github.event.issue.title }}"
 
-      - name: Determine next issue by TITLE (not labels)
+      - name: Determine next issue by TITLE
         id: next
         shell: bash
         run: |
@@ -27,7 +33,7 @@ jobs:
           NEXT_LABEL=""
           FINISH_QUEST="false"
 
-          # Match by the beginning of the Issue title
+          # Logic relies on Issue Title matching "Issue X..."
           if [[ "$TITLE" == "Issue 1"* ]]; then
             NEXT_TITLE="Issue 2 – Project Core: Create Project Structure"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-2-project-core.md"
@@ -52,9 +58,9 @@ jobs:
             FINISH_QUEST="true"
           fi
 
-          echo "next_title=$NEXT_TITLE"   >> "$GITHUB_OUTPUT"
-          echo "next_file=$NEXT_FILE"     >> "$GITHUB_OUTPUT"
-          echo "next_label=$NEXT_LABEL"   >> "$GITHUB_OUTPUT"
+          echo "next_title=$NEXT_TITLE"   >> "$GITHUB_OUTPUT"
+          echo "next_file=$NEXT_FILE"     >> "$GITHUB_OUTPUT"
+          echo "next_label=$NEXT_LABEL"   >> "$GITHUB_OUTPUT"
           echo "finish_quest=$FINISH_QUEST" >> "$GITHUB_OUTPUT"
 
       - name: Stop if no action is needed
@@ -71,7 +77,6 @@ jobs:
         with:
           title: ${{ steps.next.outputs.next_title }}
           content-filepath: ${{ steps.next.outputs.next_file }}
-          # Labels are optional now – they may or may not exist
           labels: ${{ steps.next.outputs.next_label }}
 
   finish_quest:
@@ -89,12 +94,11 @@ jobs:
         shell: bash
         run: |
           CONGRATS_MESSAGE=$(cat <<-EOF
-
-
+          
+          
           ## 🎉 QUEST COMPLETE: CONGRATULATIONS! 🎉
 
-          **You have successfully completed the entire Django Quest Workshop!**  
-          You installed Django, configured the project structure, created your first app, set up routing and views, defined models, ran migrations, and prepared the project for administration.
+          **You have successfully completed the entire Django Quest Workshop!** You installed Django, configured the project structure, created your first app, set up routing and views, defined models, ran migrations, and prepared the project for administration.
 
           This project is now a solid foundation for building your full application.
 
@@ -105,6 +109,7 @@ jobs:
           2. **Login:** Visit `/admin/` and log in with your superuser to manage your data.
           EOF
           )
+          
           echo "$CONGRATS_MESSAGE" >> README.md
 
       - name: Commit and Push README changes
