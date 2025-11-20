@@ -1,3 +1,8 @@
+> ⚠️ **Important:**  
+> This repository is a **Template** for the Django Quest.  
+> **Do not** clone or fork this repo to do the exercises.  
+> Instead, click **Use this template → Create a new repository** and work in **your own copy**.
+
 # 🚀 The Django Setup Quest: Build Your First Django Project!
 
 ![Django Logo](https://img.icons8.com/color/452/django.png)
