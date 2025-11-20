@@ -2,13 +2,13 @@
 name: "Issue 1 – Setup Django & Dependencies"
 about: "Start the Quest by creating your virtual environment, installing Django, and generating requirements.txt"
 title: "Issue 1 – Setup Django & Dependencies"
-labels: issue-1
+labels: ["issue-1"]
 assignees: ""
 ---
 
 # 🧙‍♂️ Issue 1 – Setup Django & Dependencies  
 Welcome to the first stage of your Django Setup Quest!  
-In this step, you’ll prepare your environment, install Django, and generate your `requirements.txt` file.
+In this step, you’ll prepare your computer, install Django, and generate your `requirements.txt` file.
 
 Follow all steps carefully — everything later in the Quest depends on this setup.
 
