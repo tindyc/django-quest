@@ -1,3 +1,11 @@
+---
+name: "Issue 1 – Setup Django & Dependencies"
+about: "Start the Quest by creating your virtual environment, installing Django, and generating requirements.txt"
+title: "Issue 1 – Setup Django & Dependencies"
+labels: issue-1
+assignees: ""
+---
+
 # 🧙‍♀️ Issue 1 -- Setup Django & Dependencies
 
 Welcome to the first challenge of your Django Quest!
