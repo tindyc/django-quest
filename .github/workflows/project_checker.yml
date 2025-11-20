@@ -6,7 +6,6 @@ on:
     types: [ opened, synchronize, reopened ]
 
 env:
-  # The source branch name (e.g., "issue-3-create-app").
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
@@ -14,17 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ---------------------------------------
-      # 0. Show basic context and set expectations
-      # ---------------------------------------
+      # ---------------------------
+      # 0. Show PR & branch info
+      # ---------------------------
       - name: Show PR & branch info
         run: |
-          echo "Using Branch Name: '${{ env.BRANCH_NAME }}'"
-          echo "Branch name must match: issue-X-description (e.g. issue-3-create-app)."
+          echo "🔍 Branch name: '${{ env.BRANCH_NAME }}'"
+          echo "Base branch: '${{ github.base_ref }}'"
 
-      # ------------------------------------------------
-      # 1. Determine which Issue this branch belongs to
-      # ------------------------------------------------
+      # ---------------------------
+      # 1. Detect issue number
+      # ---------------------------
       - name: Detect issue number from branch name
         id: issue_info
         shell: bash
@@ -32,23 +31,23 @@ jobs:
           BRANCH="${{ env.BRANCH_NAME }}"
           if [[ "$BRANCH" =~ ^issue-([1-6])-.+ ]]; then
             ISSUE="${BASH_REMATCH[1]}"
-            echo "Detected Issue Branch: Issue $ISSUE"
+            echo "✅ Detected issue branch: Issue $ISSUE"
             echo "valid=true" >> "$GITHUB_OUTPUT"
             echo "issue_number=$ISSUE" >> "$GITHUB_OUTPUT"
           else
-            echo "Branch name does NOT match expected pattern 'issue-X-description'."
-            echo "::notice::No Django Quest checks ran. Rename your branch (e.g., issue-3-create-app) to enable checks."
+            echo "⚠️ Branch name does NOT match expected pattern 'issue-X-description'."
+            echo "::notice::No Quest checks ran. Rename your branch (e.g. issue-1-setup) to run the Django Quest Checker."
             echo "valid=false" >> "$GITHUB_OUTPUT"
             echo "issue_number=0" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Stop if not an issue branch
         if: steps.issue_info.outputs.valid != 'true'
-        run: echo "Stopping workflow early because this is not an issue-X- branch."
+        run: echo "⏹️ Stopping workflow – not an issue-* branch."
 
-      # ------------------------------------------------
-      # 2. Checkout & Python setup (only for valid issue)
-      # ------------------------------------------------
+      # ---------------------------
+      # 2. Checkout & Python setup
+      # ---------------------------
       - name: Checkout repository
         if: steps.issue_info.outputs.valid == 'true'
         uses: actions/checkout@v4
@@ -59,51 +58,53 @@ jobs:
         with:
           python-version: "3.x"
 
-      # ---------------------------------------
-      # Issue 1 – Install Django & requirements.txt
-      # ---------------------------------------
-      - name: Verify requirements.txt (Issue 1 Check)
+      # ---------------------------
+      # Issue 1 – requirements.txt
+      # ---------------------------
+      - name: Verify requirements.txt (Issue 1)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 1
         shell: bash
         run: |
-          echo "Checking for requirements.txt and Django (Issue 1)..."
+          echo "🔎 Checking requirements.txt and Django (Issue 1)…"
 
           if [ ! -f requirements.txt ]; then
-            echo "::error file=requirements.txt::FATAL: Missing requirements.txt. Fix: Run 'pip freeze --local > requirements.txt' and commit it."
+            echo "::error file=requirements.txt::FATAL: requirements.txt not found. Fix: Run 'pip freeze --local > requirements.txt' after installing Django."
             exit 1
           fi
 
           if ! grep -i -q "django" requirements.txt; then
-            echo "::error file=requirements.txt::FATAL: Django is missing from requirements.txt. Fix: 'pip install Django', then 'pip freeze --local > requirements.txt'."
+            echo "::error file=requirements.txt::FATAL: Django is missing from requirements.txt. Fix: 'pip install Django' then 'pip freeze --local > requirements.txt'."
             exit 1
           fi
 
-          echo "OK: requirements.txt exists and contains Django."
+          echo "✅ requirements.txt exists and contains Django."
 
       - name: Install dependencies
-        if: success() && fromJSON(steps.issue_info.outputs.issue_number) >= 1
+        if: |
+          steps.issue_info.outputs.valid == 'true' &&
+          fromJSON(steps.issue_info.outputs.issue_number) >= 1
         run: |
-          echo "Installing dependencies from requirements.txt..."
+          echo "📦 Installing dependencies from requirements.txt…"
           pip install -r requirements.txt
-          echo "Dependencies installed."
+          echo "✅ Dependencies installed."
 
-      # ---------------------------------------
-      # Issue 2 – Project core (manage.py + settings)
-      # ---------------------------------------
-      - name: Verify Django project (Issue 2 Check)
+      # ---------------------------
+      # Issue 2 – manage.py & settings
+      # ---------------------------
+      - name: Verify Django project core (Issue 2)
         id: project_info
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 2
         shell: bash
         run: |
-          echo "Checking for manage.py and Django settings (Issue 2)..."
+          echo "🔎 Checking for manage.py and settings (Issue 2)…"
           set -e
 
           if [ ! -f manage.py ]; then
-            echo "::error file=manage.py::FATAL: manage.py not found. Fix: Run 'django-admin startproject <project_name> .' (remember the dot!) and commit the files."
+            echo "::error file=manage.py::FATAL: manage.py not found. Fix: Run 'django-admin startproject <project_name> .' (note the dot at the end)."
             exit 1
           fi
 
@@ -111,19 +112,24 @@ jobs:
           PROJECT_NAME=$(echo "$PROJECT_SETTINGS" | sed 's/\..*//')
           SETTINGS_PATH=$(echo "$PROJECT_SETTINGS" | sed 's/\./\//g').py
 
-          echo "project_name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
-
-          if [ ! -f "$SETTINGS_PATH" ]; then
-            echo "::error file=$SETTINGS_PATH::FATAL: settings.py not found at $SETTINGS_PATH. Fix: Commit the project folder '$PROJECT_NAME' created by 'django-admin startproject'."
+          if [ -z "$PROJECT_NAME" ]; then
+            echo "::error file=manage.py::FATAL: Could not detect DJANGO_SETTINGS_MODULE in manage.py."
             exit 1
           fi
 
-          echo "OK: Detected project name '$PROJECT_NAME' and settings at '$SETTINGS_PATH'."
+          echo "project_name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
 
-      # ---------------------------------------
-      # Issue 3 – App creation & registration
-      # ---------------------------------------
-      - name: Verify app creation & registration (Issue 3 Check)
+          if [ ! -f "$SETTINGS_PATH" ]; then
+            echo "::error file=$SETTINGS_PATH::FATAL: settings.py not found at $SETTINGS_PATH. Did you commit the project folder '$PROJECT_NAME'?"
+            exit 1
+          fi
+
+          echo "✅ Detected project '$PROJECT_NAME' with settings at $SETTINGS_PATH."
+
+      # ---------------------------
+      # Issue 3 – app & INSTALLED_APPS
+      # ---------------------------
+      - name: Verify app creation & registration (Issue 3)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 3
@@ -131,111 +137,98 @@ jobs:
         run: |
           PROJECT_NAME="${{ steps.project_info.outputs.project_name }}"
           SETTINGS_PATH="$PROJECT_NAME/settings.py"
-          echo "Checking for a custom app and INSTALLED_APPS registration (Issue 3)..."
-          set -e
+
+          echo "🔎 Checking for apps and INSTALLED_APPS (Issue 3)…"
 
           APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h\n" | sed 's|^\./||' | sort -u)
 
           if [ -z "$APP_DIRS" ]; then
-            echo "::error::FATAL: No custom Django app (apps.py) found. Fix: Run 'python manage.py startapp <app_name>' and commit the new folder."
+            echo "::error::FATAL: No Django app found. Fix: Run 'python manage.py startapp <app_name>'."
             exit 1
           fi
 
-          MISSING_REG=""
+          MISSING=""
           for APP in $APP_DIRS; do
             APP_NAME=$(basename "$APP")
             if ! grep -q "'$APP_NAME'" "$SETTINGS_PATH"; then
-              MISSING_REG="$MISSING_REG $APP_NAME"
+              MISSING="$MISSING $APP_NAME"
             fi
           done
 
-          if [ -n "$MISSING_REG" ]; then
-            echo "::error file=$SETTINGS_PATH::FATAL: The following apps are not registered in INSTALLED_APPS:$MISSING_REG. Fix: Add each app name to INSTALLED_APPS in '$SETTINGS_PATH'."
+          if [ -n "$MISSING" ]; then
+            echo "::error file=$SETTINGS_PATH::FATAL: These apps are not registered in INSTALLED_APPS:$MISSING"
             exit 1
           fi
 
-          echo "OK: At least one app exists and is registered in INSTALLED_APPS."
+          echo "✅ At least one app exists and is registered in INSTALLED_APPS."
 
-      # ---------------------------------------
-      # Issue 4 – URL routing & view
-      # ---------------------------------------
-      - name: Verify root URL returns HTTP 200 (Issue 4 Check)
+      # ---------------------------
+      # Issue 4 – root URL returns 200
+      # ---------------------------
+      - name: Verify root URL '/' returns HTTP 200 (Issue 4)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 4
         shell: bash
         run: |
-          echo "Checking that GET / returns HTTP 200 (Issue 4)..."
-          set -e
-
-          cat > _quest_check_root.py << 'PYCODE'
+          echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
+          python manage.py shell -c "
 from django.test import Client
 from django.urls import resolve
 import sys
 
 try:
-    match = resolve("/")
+    match = resolve('/')
 except Exception as e:
-    sys.stderr.write(f"::error::ERROR: Could not resolve root URL '/'. Fix: Check your urls.py files. Details: {e}\n")
+    sys.stderr.write(f'::error::ERROR: Could not resolve root URL \"/\". Fix: Check your project and app urls.py include patterns. Details: {e}\\n')
     sys.exit(1)
 
 client = Client()
-response = client.get("/")
+response = client.get('/')
 if response.status_code != 200:
-    sys.stderr.write(f"::error::ERROR: GET '/' returned status code {response.status_code} (expected 200). Fix: Ensure your view function returns an HttpResponse and your URL routing is correct.\n")
+    sys.stderr.write(f'::error::ERROR: GET \"/\" returned status code {response.status_code} (expected 200). Fix: Ensure your view returns an HttpResponse.\\n')
     sys.exit(1)
-PYCODE
+"
+          echo "✅ Root URL '/' returns HTTP 200."
 
-          python _quest_check_root.py
-          echo "OK: Root URL '/' returns HTTP 200."
-
-      # ---------------------------------------
-      # Issue 5 – Models & migrations
-      # ---------------------------------------
-      - name: Run makemigrations (Issue 5 Check)
+      # ---------------------------
+      # Issue 5 – makemigrations & migrate
+      # ---------------------------
+      - name: Run makemigrations (Issue 5)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 5
-        shell: bash
         run: |
-          echo "Running 'python manage.py makemigrations --noinput' (Issue 5)..."
-          set -e
+          echo "🔎 Running 'python manage.py makemigrations --noinput' (Issue 5)…"
           python manage.py makemigrations --noinput
-          echo "OK: makemigrations completed successfully."
+          echo "✅ makemigrations completed successfully."
 
-      - name: Run migrate (Issue 5 Check)
+      - name: Run migrate (Issue 5)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 5
-        shell: bash
         run: |
-          echo "Running 'python manage.py migrate --noinput' (Issue 5)..."
-          set -e
+          echo "🔎 Running 'python manage.py migrate --noinput' (Issue 5)…"
           python manage.py migrate --noinput
-          echo "OK: migrate completed successfully."
+          echo "✅ migrate completed successfully."
 
-      # ---------------------------------------
-      # Issue 6 – Project health (Final Check)
-      # ---------------------------------------
-      - name: Django system check (Issue 6 Check)
+      # ---------------------------
+      # Issue 6 – system check
+      # ---------------------------
+      - name: Django system check (Issue 6)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 6
-        shell: bash
         run: |
-          echo "Running 'python manage.py check' (Issue 6)..."
-          set -e
+          echo "🔎 Running 'python manage.py check' (Issue 6)…"
           python manage.py check
-          echo "OK: Django system check passed."
+          echo "✅ Django system check passed."
 
-      # ---------------------------------------
-      # Final friendly summary
-      # ---------------------------------------
+      # ---------------------------
+      # Friendly summary
+      # ---------------------------
       - name: Summary
         if: steps.issue_info.outputs.valid == 'true'
         run: |
-          echo "All applicable checks for Issue ${{ steps.issue_info.outputs.issue_number }} have finished."
-          echo "If this workflow is green, you can:"
-          echo "  1) Review your changes."
-          echo "  2) Merge the Pull Request."
-          echo "  3) Move on to the next Issue in the Django Quest."
+          echo "🎉 Django Quest checks finished for Issue ${{ steps.issue_info.outputs.issue_number }}."
+          echo "If this job is green, you can merge your PR and move on to the next Issue."
