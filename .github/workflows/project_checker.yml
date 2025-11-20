@@ -170,7 +170,7 @@ jobs:
           echo "✅ At least one app exists and is registered in INSTALLED_APPS."
 
       # ---------------------------------------
-      # Issue 4 – URL routing & view (Single-line shell command fix)
+      # Issue 4 – URL routing & view (Final Safe Fix)
       # ---------------------------------------
       - name: Verify root URL '/' returns HTTP 200 (Issue 4 Check)
         if: |
@@ -181,8 +181,8 @@ jobs:
           echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
           set -e # Stop bash script on error
           
-          # Consolidated Python script into a single shell command to avoid multi-line YAML parsing errors.
-          python manage.py shell -c "from django.test import Client; from django.urls import resolve; import sys; try: resolve('/'); except Exception as e: sys.stderr.write(f'::error::ERROR: Could not resolve root URL \"/\". Fix: Check urls.py includes (Step 10). Details: {e}\n'); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write(f'::error::ERROR: GET \"/\" returned {response.status_code} (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n'); sys.exit(1);"
+          # FINAL SAFE FIX: Using a single, clean Python command to avoid multi-line YAML parsing errors.
+          python manage.py shell -c "import sys; from django.test import Client; from django.urls import resolve; try: resolve('/'); except Exception as e: sys.stderr.write('::error::ERROR: Could not resolve root URL \"/\". Fix: Check urls.py includes (Step 10). Details: %s\n' % e); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write('::error::ERROR: GET \"/\" returned %s (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n' % response.status_code); sys.exit(1);"
           
           echo "✅ Root URL '/' returns HTTP 200." 
 
