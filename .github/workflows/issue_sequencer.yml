@@ -7,12 +7,12 @@ on:
 jobs:
   open_next_issue:
     runs-on: ubuntu-latest
-    
-    # REQUIRED FIX: Explicitly grant write access to issues
+
+    # Permissions: can read repo and create issues
     permissions:
-      contents: read 
+      contents: read
       issues: write
-      
+
     outputs:
       finish_quest: ${{ steps.next.outputs.finish_quest }}
 
@@ -33,7 +33,7 @@ jobs:
           NEXT_LABEL=""
           FINISH_QUEST="false"
 
-          # Logic relies on Issue Title matching "Issue X..."
+          # Logic relies on Issue Title starting with "Issue X"
           if [[ "$TITLE" == "Issue 1"* ]]; then
             NEXT_TITLE="Issue 2 – Project Core: Create Project Structure"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-2-project-core.md"
@@ -75,9 +75,8 @@ jobs:
         if: steps.next.outputs.next_title != ''
         uses: peter-evans/create-issue-from-file@v5
         with:
-          # --- REQUIRED FIX: USE PAT FOR ISSUE CREATION ---
-          token: ${{ secrets.ISSUE_CREATION_PAT }} 
-          # ------------------------------------------------
+          # Uses built-in GITHUB_TOKEN; no PAT needed
+          token: ${{ secrets.GITHUB_TOKEN }}
           title: ${{ steps.next.outputs.next_title }}
           content-filepath: ${{ steps.next.outputs.next_file }}
           labels: ${{ steps.next.outputs.next_label }}
@@ -87,18 +86,19 @@ jobs:
     needs: open_next_issue
     if: needs.open_next_issue.outputs.finish_quest == 'true'
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository for README update
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add Congratulations Message to README.md
         shell: bash
         run: |
-          CONGRATS_MESSAGE=$(cat <<-EOF
-          
-          
+          CONGRATS_MESSAGE=$(cat <<-'EOF'
+
+
           ## 🎉 QUEST COMPLETE: CONGRATULATIONS! 🎉
 
           **You have successfully completed the entire Django Quest Workshop!** You installed Django, configured the project structure, created your first app, set up routing and views, defined models, ran migrations, and prepared the project for administration.
@@ -112,7 +112,7 @@ jobs:
           2. **Login:** Visit `/admin/` and log in with your superuser to manage your data.
           EOF
           )
-          
+
           echo "$CONGRATS_MESSAGE" >> README.md
 
       - name: Commit and Push README changes
