@@ -208,7 +208,7 @@ from django.urls import resolve
 try:
     resolve('/')
 except Exception as e:
-    # Use double quotes for the shell command, so use single quotes inside
+    # Use single quotes inside the Python string for better readability
     sys.stderr.write('::error::ERROR: Could not resolve root URL /... Fix: Check project urls.py includes path(\'\', include(\'<app_name>.urls\')). Details: %s\\n' % e)
     sys.exit(1)
 
