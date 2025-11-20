@@ -1,4 +1,4 @@
-name: Auto Close Issue on PR Merge
+name: Auto Close Linked Issue on PR Merge
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
-    # Needs permissions to read the PR body/commits and write to issues
+    # Needs permissions to read the branch name and write to issues
     permissions:
       pull-requests: read
       issues: write
@@ -22,16 +22,29 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // This script checks the PR body and commits for keywords like 'Closes #X'
-            // and uses the GitHub API to close the corresponding issue.
-            const prBody = context.payload.pull_request.body;
-            const prCommitMessage = context.payload.pull_request.title;
-
-            const issueNumberMatch = prBody.match(/(?:[Cc]loses|Fixes|Resolves)\s*#(\d+)/) ||
-                                      prCommitMessage.match(/(?:[Cc]loses|Fixes|Resolves)\s*#(\d+)/);
-
-            if (issueNumberMatch) {
-              const issueNumber = issueNumberMatch[1];
+            const prHeadRef = context.payload.pull_request.head.ref;
+            const issueTitle = context.payload.pull_request.title;
+            let issueNumber = null;
+            
+            console.log(`PR Head Branch: ${prHeadRef}`);
+            
+            // 1. Attempt to extract issue number from the branch name (e.g., 'issue-1-setup')
+            const branchMatch = prHeadRef.match(/^issue-([1-6])-\w+/i);
+            
+            if (branchMatch) {
+              issueNumber = branchMatch[1];
+              console.log(`Found issue number #${issueNumber} in branch name.`);
+            } else {
+              // Fallback: Check the PR title if the branch name fails (e.g., 'Issue 2: Completed task')
+              const titleMatch = issueTitle.match(/(?:Issue)\s*#?(\d+)/i);
+              if (titleMatch) {
+                issueNumber = titleMatch[1];
+                console.log(`Found issue number #${issueNumber} in PR title.`);
+              }
+            }
+            
+            if (issueNumber) {
+              // Proceed with closing the detected issue
               console.log(`Attempting to close issue #${issueNumber}`);
               
               await github.rest.issues.update({
@@ -41,7 +54,7 @@ jobs:
                 state: 'closed'
               });
               
-              console.log(`Successfully closed issue #${issueNumber}.`);
+              console.log(`Successfully closed issue #${issueNumber}. The sequencer is triggered.`);
             } else {
-              console.log('No closing keyword found in PR title or body.');
+              console.log('Could not reliably link PR to an open Quest Issue. Manual closure is required.');
             }
