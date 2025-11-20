@@ -108,9 +108,7 @@ jobs:
             exit 1
           fi
 
-          # ---------------------------------------------------------------------
           # FIX: Simplify settings detection logic to avoid complex regex issues
-          # ---------------------------------------------------------------------
           PROJECT_SETTINGS=$(grep 'DJANGO_SETTINGS_MODULE' manage.py | grep -o "\'.*\'" | tr -d "'")
           
           if [ -z "$PROJECT_SETTINGS" ]; then
@@ -127,7 +125,6 @@ jobs:
             echo "::error file=$SETTINGS_PATH::FATAL: settings.py not found at $SETTINGS_PATH. Fix: Commit the project folder '$PROJECT_NAME' created by 'django-admin startproject'."
             exit 1
           fi
-          # ---------------------------------------------------------------------
 
           echo "✅ Detected project name: $PROJECT_NAME at $SETTINGS_PATH"
 

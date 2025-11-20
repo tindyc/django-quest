@@ -10,8 +10,8 @@ jobs:
     
     # REQUIRED FIX: Explicitly grant write access to issues
     permissions:
-      contents: read # Read access is usually sufficient for files
-      issues: write  # Crucial for creating the new Issue
+      contents: read 
+      issues: write
       
     outputs:
       finish_quest: ${{ steps.next.outputs.finish_quest }}
@@ -58,9 +58,9 @@ jobs:
             FINISH_QUEST="true"
           fi
 
-          echo "next_title=$NEXT_TITLE"   >> "$GITHUB_OUTPUT"
-          echo "next_file=$NEXT_FILE"     >> "$GITHUB_OUTPUT"
-          echo "next_label=$NEXT_LABEL"   >> "$GITHUB_OUTPUT"
+          echo "next_title=$NEXT_TITLE" >> "$GITHUB_OUTPUT"
+          echo "next_file=$NEXT_FILE" >> "$GITHUB_OUTPUT"
+          echo "next_label=$NEXT_LABEL" >> "$GITHUB_OUTPUT"
           echo "finish_quest=$FINISH_QUEST" >> "$GITHUB_OUTPUT"
 
       - name: Stop if no action is needed
@@ -75,6 +75,9 @@ jobs:
         if: steps.next.outputs.next_title != ''
         uses: peter-evans/create-issue-from-file@v5
         with:
+          # --- REQUIRED FIX: USE PAT FOR ISSUE CREATION ---
+          token: ${{ secrets.ISSUE_CREATION_PAT }} 
+          # ------------------------------------------------
           title: ${{ steps.next.outputs.next_title }}
           content-filepath: ${{ steps.next.outputs.next_file }}
           labels: ${{ steps.next.outputs.next_label }}
