@@ -1,6 +1,10 @@
 name: Django Setup Quest Checker
 
-on: pull_request
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    # Use quotes around "main" for maximum compatibility
+    branches: ["main"] 
 
 env:
   # The source branch name (e.g., "issue-3-create-app").
@@ -8,12 +12,7 @@ env:
 
 jobs:
   check_django_setup:
-    # Filter the job to run only for PRs targeting 'main' that are open/updated
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.action != 'closed' &&
-      github.base_ref == 'refs/heads/main'
-      
+    # Removed the complex job-level 'if:' filter and returned to basic trigger.
     runs-on: ubuntu-latest
 
     steps:
@@ -182,7 +181,7 @@ jobs:
           set -e # Stop bash script on error
           
           # FINAL SAFE FIX: Using a single, clean Python command to avoid multi-line YAML parsing errors.
-          python manage.py shell -c "import sys; from django.test import Client; from django.urls import resolve; try: resolve('/'); except Exception as e: sys.stderr.write('::error::ERROR: Could not resolve root URL \"/\". Fix: Check urls.py includes (Step 10). Details: %s\n' % e); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write('::error::ERROR: GET \"/\" returned %s (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n' % response.status_code); sys.exit(1);"
+          python manage.py shell -c "import sys; from django.test import Client; from django.urls import resolve; try: resolve('/'); except Exception as e: sys.stderr.write('::error::ERROR: Could not resolve root URL \"/\". Fix: Check urls.py includes (Step 10). Details: %s\n' % e); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write('::error::ERROR: GET \"/\" returned %s (expected 200). Fix: Ensure your view returns an an HttpResponse (Step 9).\n' % response.status_code); sys.exit(1);"
           
           echo "✅ Root URL '/' returns HTTP 200." 
 
