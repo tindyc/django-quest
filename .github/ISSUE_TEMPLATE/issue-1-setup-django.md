@@ -2,11 +2,12 @@
 name: "Issue 1 – Setup Django & Dependencies"
 about: "Start the Quest by creating your virtual environment, installing Django, and generating requirements.txt"
 title: "Issue 1 – Setup Django & Dependencies"
-labels: ["issue-1"]
+labels: issue-1
 assignees: ""
 ---
 
-# 🧙‍♂️ Issue 1 – Setup Django & Dependencies  
+# 🧙‍♀️ Issue 1 – Setup Django & Dependencies  
+
 Welcome to the first stage of your Django Setup Quest!  
 In this step, you’ll prepare your computer, install Django, and generate your `requirements.txt` file.
 
@@ -14,41 +15,47 @@ Follow all steps carefully — everything later in the Quest depends on this set
 
 ---
 
-# 🖥 1. Clone this repository to your computer
+## 🖥 1. Clone *this* repository to your computer
 
-1. Click the green **Code** button on this repo.
+> If you haven’t already, first create **your own copy** of this project by clicking  
+> **Use this template → Create a new repository** on GitHub.  
+> These steps assume you are now working in **your own repo**.
+
+1. On your repo page, click the green **Code** button.
 2. Copy the **HTTPS** link.
 3. Open **VS Code**.
 4. Press:
    - **Cmd + Shift + P** (macOS), or  
    - **Ctrl + Shift + P** (Windows)
-5. Type: **Git: Clone**
+5. Type: `Git: Clone`
 6. Paste your repo URL.
 7. Choose a folder on your computer.
 8. When VS Code asks, click **Open** to load the project.
 
 ---
 
-# 🧪 2. Open a terminal in VS Code
+## 🧪 2. Open a terminal in VS Code
 
 In VS Code:
 
 - Go to **View → Terminal**
-- Confirm the terminal path matches your project folder.
+- Confirm the terminal path matches your project folder (you should see your repo folder at the end of the path).
 
 ---
 
-# 🐍 3. Create and activate your virtual environment
+## 🐍 3. Create and activate your virtual environment
 
 This keeps your project’s Python packages isolated (very important!).
 
-### macOS / Linux:
+### macOS / Linux
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Windows (PowerShell):
+### Windows (PowerShell)
+
 ```powershell
 python -m venv venv
 .env\Scripts\Activate.ps1
@@ -56,13 +63,13 @@ python -m venv venv
 
 If it worked, your terminal prompt will start with:
 
-```
-(venv)
+```text
+(venv) …
 ```
 
 ---
 
-# 📦 4. Install Django
+## 📦 4. Install Django
 
 Run:
 
@@ -72,10 +79,10 @@ pip install "Django>=4.2,<6.0"
 
 ---
 
-# 📄 5. Create `requirements.txt`
+## 📄 5. Create `requirements.txt`
 
 This file records your installed packages.  
-The automated checker will validate this file.
+The automated checker will validate this file in the next step.
 
 Run:
 
@@ -91,15 +98,15 @@ ls
 
 You should see:
 
-```
+```text
 requirements.txt
 ```
 
-Open it — you should see a line with **Django**.
+Open it — you should see a line containing **Django**.
 
 ---
 
-# 🌱 6. Create your Issue 1 branch
+## 🌱 6. Create your Issue 1 branch
 
 Each step of the Quest must be done in its own branch.
 
@@ -111,13 +118,11 @@ git checkout -b issue-1-setup
 
 ⚠️ **IMPORTANT:**  
 Your branch **must** start with `issue-1-`  
-or the validator will *not* run.
+or the validator will *not* run on the PR.
 
 ---
 
-# 💾 7. Commit your work
-
-Run:
+## 💾 7. Commit your work
 
 ```bash
 git add requirements.txt
@@ -126,9 +131,7 @@ git commit -m "Issue 1: Install Django and create requirements.txt"
 
 ---
 
-# 🚀 8. Push your branch to GitHub
-
-Run:
+## 🚀 8. Push your branch to GitHub
 
 ```bash
 git push -u origin issue-1-setup
@@ -136,10 +139,10 @@ git push -u origin issue-1-setup
 
 ---
 
-# 🔁 9. Open a Pull Request (PR)
+## 🔁 9. Open a Pull Request (PR)
 
 1. Go to your repository on GitHub.
-2. Click **Compare & pull request**.
+2. Click the **Compare & pull request** banner, or go to the **Pull requests** tab and click **New pull request**.
 3. Make sure:
    - **Base branch:** `main`
    - **Compare branch:** `issue-1-setup`
@@ -147,7 +150,7 @@ git push -u origin issue-1-setup
 
 ---
 
-# 🤖 10. Wait for the Django Quest Checker (CI)
+## 🤖 10. Wait for the Django Quest Checker (CI)
 
 Your PR now triggers automated validation.
 
@@ -159,26 +162,35 @@ Your PR now triggers automated validation.
 
 If the check fails:
 
-1. Read the error message  
-2. Fix the issue locally  
-3. Commit and push again  
-4. CI will rerun automatically  
+1. Read the error message (it will point to the file / step that failed).  
+2. Fix the issue locally.  
+3. Run:
+
+   ```bash
+   git add .
+   git commit -m "Fix Issue 1 CI failure"
+   git push
+   ```
+
+4. The check will rerun automatically.
 
 ---
 
-# 🟢 11. Merge the PR
+## 🟢 11. Merge the PR & close this Issue
 
 Once CI is **green**:
 
-1. Click **Merge pull request**
-2. Return to this Issue
-3. Click **Close issue**
+1. Click **Merge pull request**.
+2. Click **Confirm merge**.
+3. Return to this Issue.
+4. Click **Close issue**.
 
-Closing this issue automatically unlocks **Issue 2**.
+Closing this issue automatically unlocks **Issue 2** in your repository.
 
 ---
 
-# 🎉 Great work!
+## 🎉 Great work!
+
 You've completed the first step of your Django Quest — your environment is ready and Django is installed.
 
-➡️ Continue to **Issue 2** to create your Django project structure.
+➡️ When Issue 2 appears, move on to **Project Core: Create Project Structure**.
