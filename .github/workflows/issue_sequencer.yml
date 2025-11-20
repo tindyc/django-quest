@@ -9,51 +9,52 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       finish_quest: ${{ steps.next.outputs.finish_quest }}
-      
+
     steps:
       - name: Show closed issue info
         run: |
           echo "Closed issue: #${{ github.event.issue.number }}"
+          echo "Title: ${{ github.event.issue.title }}"
 
-      # Decide what the next issue should be, based on the label
-      - name: Determine next issue
+      - name: Determine next issue by TITLE (not labels)
         id: next
         shell: bash
         run: |
-          LABELS="${{ join(github.event.issue.labels.*.name, ',') }}"
-          
+          TITLE="${{ github.event.issue.title }}"
+
           NEXT_TITLE=""
           NEXT_FILE=""
           NEXT_LABEL=""
           FINISH_QUEST="false"
 
-          if echo "$LABELS" | grep -q "issue-1"; then
+          # Match by the beginning of the Issue title
+          if [[ "$TITLE" == "Issue 1"* ]]; then
             NEXT_TITLE="Issue 2 – Project Core: Create Project Structure"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-2-project-core.md"
             NEXT_LABEL="issue-2"
-          elif echo "$LABELS" | grep -q "issue-2"; then
+          elif [[ "$TITLE" == "Issue 2"* ]]; then
             NEXT_TITLE="Issue 3 – App Creation & Registration"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-3-app-and-registration.md"
             NEXT_LABEL="issue-3"
-          elif echo "$LABELS" | grep -q "issue-3"; then
-            NEXT_TITLE="Issue 4 – Views & URL Routing"
+          elif [[ "$TITLE" == "Issue 3"* ]]; then
+            NEXT_TITLE="Issue 4 – URL Routing & View Test"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-4-url-and-view.md"
             NEXT_LABEL="issue-4"
-          elif echo "$LABELS" | grep -q "issue-4"; then
-            NEXT_TITLE="Issue 5 – Models, Migrations & Templates"
+          elif [[ "$TITLE" == "Issue 4"* ]]; then
+            NEXT_TITLE="Issue 5 – Models & Migrations"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-5-models-and-templates.md"
             NEXT_LABEL="issue-5"
-          elif echo "$LABELS" | grep -q "issue-5"; then
-            NEXT_TITLE="Issue 6 – User Management: Create Superuser"
+          elif [[ "$TITLE" == "Issue 5"* ]]; then
+            NEXT_TITLE="Issue 6 – Superuser & Admin"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-6-superuser.md"
             NEXT_LABEL="issue-6"
-          elif echo "$LABELS" | grep -q "issue-6"; then
-            FINISH_QUEST="true" # Flag the final completion
+          elif [[ "$TITLE" == "Issue 6"* ]]; then
+            FINISH_QUEST="true"
           fi
 
-          echo "next_title=$NEXT_TITLE" >> "$GITHUB_OUTPUT"
-          echo "next_file=$NEXT_FILE" >> "$GITHUB_OUTPUT"
-          echo "next_label=$NEXT_LABEL" >> "$GITHUB_OUTPUT"
+          echo "next_title=$NEXT_TITLE"   >> "$GITHUB_OUTPUT"
+          echo "next_file=$NEXT_FILE"     >> "$GITHUB_OUTPUT"
+          echo "next_label=$NEXT_LABEL"   >> "$GITHUB_OUTPUT"
           echo "finish_quest=$FINISH_QUEST" >> "$GITHUB_OUTPUT"
 
       - name: Stop if no action is needed
@@ -70,41 +71,40 @@ jobs:
         with:
           title: ${{ steps.next.outputs.next_title }}
           content-filepath: ${{ steps.next.outputs.next_file }}
+          # Labels are optional now – they may or may not exist
           labels: ${{ steps.next.outputs.next_label }}
-          
+
   finish_quest:
     runs-on: ubuntu-latest
     needs: open_next_issue
-    if: needs.open_next_issue.outputs.finish_quest == 'true' 
+    if: needs.open_next_issue.outputs.finish_quest == 'true'
 
     steps:
       - name: Checkout repository for README update
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add Congratulations Message to README.md
         shell: bash
         run: |
           CONGRATS_MESSAGE=$(cat <<-EOF
-          
-          
+
+
           ## 🎉 QUEST COMPLETE: CONGRATULATIONS! 🎉
-          
-          **You have successfully completed the entire Django Quest Workshop!** You installed Django, configured the project structure, created your first app, set up URL routing, defined models, ran migrations, and prepared the project for administration. 
-          
-          This project is now a solid foundation for building your complete application.
-          
+
+          **You have successfully completed the entire Django Quest Workshop!**  
+          You installed Django, configured the project structure, created your first app, set up routing and views, defined models, ran migrations, and prepared the project for administration.
+
+          This project is now a solid foundation for building your full application.
+
           ---
-          
           ### Next Steps
-          
-          1. **Run Locally:** Run \`python manage.py runserver\`
-          2. **Login:** Visit \`/admin/\` and log in with the superuser you created to manage your data!
-          
+
+          1. **Run locally:** `python manage.py runserver`  
+          2. **Login:** Visit `/admin/` and log in with your superuser to manage your data.
           EOF
           )
-          
           echo "$CONGRATS_MESSAGE" >> README.md
 
       - name: Commit and Push README changes
