@@ -1,9 +1,6 @@
 name: Django Setup Quest Checker
 
-on:
-  pull_request:
-    branches: [ "main" ]
-    types: [ opened, synchronize, reopened ]
+on: pull_request
 
 env:
   # The source branch name (e.g., "issue-3-create-app").
@@ -11,6 +8,12 @@ env:
 
 jobs:
   check_django_setup:
+    # Filter the job to run only for PRs targeting 'main' that are open/updated
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action != 'closed' &&
+      github.base_ref == 'refs/heads/main'
+      
     runs-on: ubuntu-latest
 
     steps:
