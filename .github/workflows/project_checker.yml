@@ -6,7 +6,7 @@ on:
     types: [ opened, synchronize, reopened ]
 
 env:
-  # The source branch name (e.g., "issue-3-create-app").
+  # The The source branch name (e.g., "issue-3-create-app").
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
@@ -111,7 +111,7 @@ jobs:
             exit 1
           fi
 
-          # Use a simple regex to get the *second* argument to os.environ.setdefault
+          # Use Python to safely extract DJANGO_SETTINGS_MODULE second argument
           PROJECT_SETTINGS=$(python - << 'PY'
 import pathlib, sys, re
 
@@ -119,16 +119,13 @@ path = pathlib.Path("manage.py")
 try:
     text = path.read_text(encoding="utf-8")
 except OSError as e:
-    sys.stderr.write(f"::error file=manage.py::FATAL: Could not read manage.py: {e}
-")
+    sys.stderr.write(f"::error file=manage.py::FATAL: Could not read manage.py: {e}\n")
     sys.exit(1)
 
-# Match: os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
-pattern = r"os\.environ\.setdefault\(\s*['"]DJANGO_SETTINGS_MODULE['"]\s*,\s*['"]([^'"]+)['"]"
+pattern = r"os\.environ\.setdefault\(\s*['\"]DJANGO_SETTINGS_MODULE['\"]\s*,\s*['\"]([^'\"]+)['\"]"
 m = re.search(pattern, text)
 if not m:
-    sys.stderr.write("::error file=manage.py::FATAL: Could not detect DJANGO_SETTINGS_MODULE. Fix: Ensure manage.py is the standard file created by 'django-admin startproject <project_name> .'.
-")
+    sys.stderr.write("::error file=manage.py::FATAL: Could not detect DJANGO_SETTINGS_MODULE. Fix: Ensure manage.py is the standard file created by 'django-admin startproject <project_name> .'.\n")
     sys.exit(1)
 
 print(m.group(1))
@@ -164,8 +161,7 @@ PY
           set -e
 
           # Find directories with apps.py (excluding the project settings folder itself)
-          APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h
-" | sed 's|^\./||' | sort -u)
+          APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h\n" | sed 's|^\./||' | sort -u)
 
           if [ -z "$APP_DIRS" ]; then
             echo "::error::FATAL: No custom Django app (apps.py) found. Fix: Run 'python manage.py startapp <app_name>' (Step 8)."
@@ -205,7 +201,6 @@ import sys
 from django.test import Client
 from django.urls import resolve
 
-# 1. Check that "/" resolves to something
 try:
     resolve("/")
 except Exception as e:
@@ -213,7 +208,6 @@ except Exception as e:
 " % e)
     sys.exit(1)
 
-# 2. Check that the view returns HTTP 200
 client = Client()
 response = client.get("/")
 
