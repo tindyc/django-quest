@@ -11,7 +11,7 @@ env:
 
 jobs:
   check_django_setup:
-    # Run only for PRs targeting the main branch
+    # Only run when the PR targets main
     if: github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
 
@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           BRANCH="${{ env.BRANCH_NAME }}"
-          # Use regex to validate branch name structure and extract the issue number
+
           if [[ "$BRANCH" =~ ^issue-([1-6])-.+ ]]; then
             ISSUE="${BASH_REMATCH[1]}"
             echo "✅ Detected Issue Branch: Issue $ISSUE"
@@ -82,6 +82,7 @@ jobs:
             echo "::error file=requirements.txt::FATAL: Django is missing. Fix: Make sure Django is installed ('pip install Django') then re-run 'pip freeze' (Step 5)."
             exit 1
           fi
+
           echo "✅ requirements.txt exists and contains Django."
 
       - name: Install dependencies
@@ -110,16 +111,28 @@ jobs:
             exit 1
           fi
 
-          # Detect settings path and project name using Django's default manage.py pattern
-          PROJECT_SETTINGS=$(grep -o "os.environ.setdefault(.*['\"][^'\"]*['\"]" manage.py | sed -E "s/.*['\"](.*)['\"]/\1/")
+          # Use a tiny Python script to detect DJANGO_SETTINGS_MODULE from manage.py
+          PROJECT_SETTINGS=$(python - << 'PY'
+          import re, sys, pathlib
+          path = pathlib.Path("manage.py")
+          try:
+            text = path.read_text(encoding="utf-8")
+          except OSError as e:
+            sys.stderr.write(f"::error file=manage.py::FATAL: Could not read manage.py: {e}\n")
+            sys.exit(1)
 
-          if [ -z "$PROJECT_SETTINGS" ]; then
-            echo "::error file=manage.py::FATAL: Could not detect DJANGO_SETTINGS_MODULE from manage.py. Fix: Ensure manage.py is the stock Django file created by 'django-admin startproject <project_name> .' and that you created the project in the repo root."
-            exit 1
-          fi
+          m = re.search(r"os\\.environ\\.setdefault\\(\\s*['\\\"]([^'\\\"]+)['\\\"]", text)
+          if not m:
+            sys.stderr.write("::error file=manage.py::FATAL: Could not detect DJANGO_SETTINGS_MODULE. Fix: Ensure manage.py is the standard file created by 'django-admin startproject <project_name> .'.\n")
+            sys.exit(1)
 
-          PROJECT_NAME=$(echo "$PROJECT_SETTINGS" | sed 's/\..*//')
-          SETTINGS_PATH=$(echo "$PROJECT_SETTINGS" | sed 's/\./\//g').py
+          print(m.group(1))
+          PY
+          )
+
+          PROJECT_SETTINGS=$(echo "$PROJECT_SETTINGS" | tr -d '[:space:]')
+          PROJECT_NAME="${PROJECT_SETTINGS%%.*}"
+          SETTINGS_PATH="${PROJECT_SETTINGS//./\/}.py"
 
           echo "project_name=$PROJECT_NAME" >> "$GITHUB_OUTPUT"
 
@@ -141,12 +154,12 @@ jobs:
         run: |
           PROJECT_NAME="${{ steps.project_info.outputs.project_name }}"
           SETTINGS_PATH="$PROJECT_NAME/settings.py" 
+
           echo "🔎 Checking for a custom app and its registration (Issue 3)..."
           set -e
 
           # Find directories with apps.py (excluding the project settings folder itself)
-          APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h
-" | sed 's|^\./||' | sort -u)
+          APP_DIRS=$(find . -maxdepth 2 -type f -name "apps.py" -not -path "./$PROJECT_NAME/*" -printf "%h\n" | sed 's|^\./||' | sort -u)
 
           if [ -z "$APP_DIRS" ]; then
             echo "::error::FATAL: No custom Django app (apps.py) found. Fix: Run 'python manage.py startapp <app_name>' (Step 8)."
@@ -170,7 +183,7 @@ jobs:
           echo "✅ At least one app exists and is registered in INSTALLED_APPS."
 
       # ---------------------------------------
-      # Issue 4 – URL routing & view (Single-line shell command fix)
+      # Issue 4 – URL routing & view
       # ---------------------------------------
       - name: Verify root URL '/' returns HTTP 200 (Issue 4 Check)
         if: |
@@ -180,11 +193,27 @@ jobs:
         run: |
           echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
           set -e
+          
+          python manage.py shell - << 'PY'
+          import sys
+          from django.test import Client
+          from django.urls import resolve
 
-          # Consolidated Python script into a single shell command to avoid multi-line YAML parsing errors.
-          python manage.py shell -c "from django.test import Client; from django.urls import resolve; import sys; try: resolve('/'); except Exception as e: sys.stderr.write(f'::error::ERROR: Could not resolve root URL "/". Fix: Check urls.py includes (Step 10). Details: {e}\n'); sys.exit(1); client = Client(); response = client.get('/'); if response.status_code != 200: sys.stderr.write(f'::error::ERROR: GET "/" returned {response.status_code} (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n'); sys.exit(1);"
+          try:
+              resolve("/")
+          except Exception as e:
+              sys.stderr.write('::error::ERROR: Could not resolve root URL "/". Fix: Check urls.py includes (Step 10). Details: %s\n' % e)
+              sys.exit(1)
 
-          echo "✅ Root URL '/' returns HTTP 200." 
+          client = Client()
+          response = client.get("/")
+
+          if response.status_code != 200:
+              sys.stderr.write('::error::ERROR: GET "/" returned %s (expected 200). Fix: Ensure your view returns an HttpResponse (Step 9).\n' % response.status_code)
+              sys.exit(1)
+          PY
+
+          echo "✅ Root URL '/' returns HTTP 200."
 
       # ---------------------------------------
       # Issue 5 – Models & migrations
