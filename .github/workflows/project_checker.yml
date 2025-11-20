@@ -146,7 +146,7 @@ jobs:
         run: |
           echo "🔎 Checking that GET / returns HTTP 200 (Issue 4)…"
           set -e
-          python manage.py shell -c 'from django.test import Client; import sys; c = Client(); r = c.get("/"); sys.exit(0 if r.status_code == 200 else 1)'
+          python manage.py shell -c 'from django.test import Client; from django.conf import settings; settings.ALLOWED_HOSTS = list(getattr(settings, "ALLOWED_HOSTS", [])) + ["testserver"]; c = Client(); r = c.get("/"); import sys; sys.exit(0 if r.status_code == 200 else 1)'
           echo "✅ Root URL '/' returns HTTP 200."
 
       # ---------------------------------------
