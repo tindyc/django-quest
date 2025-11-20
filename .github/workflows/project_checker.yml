@@ -96,6 +96,9 @@ jobs:
       # ---------------------------------------
       # Issue 2 – Project core (manage.py + settings)
       # ---------------------------------------
+       # ---------------------------------------
+      # Issue 2 – Project core (manage.py + settings)
+      # ---------------------------------------
       - name: Verify Django project (Issue 2 Check)
         id: project_info
         if: |
@@ -111,9 +114,9 @@ jobs:
             exit 1
           fi
 
-          # Use a simple parser instead of a complex regex
+          # Use a simple regex to get the *second* argument to os.environ.setdefault
           PROJECT_SETTINGS=$(python - << 'PY'
-          import pathlib, sys
+          import pathlib, sys, re
 
           path = pathlib.Path("manage.py")
           try:
@@ -122,38 +125,14 @@ jobs:
               sys.stderr.write(f"::error file=manage.py::FATAL: Could not read manage.py: {e}\n")
               sys.exit(1)
 
-          marker = "os.environ.setdefault("
-          idx = text.find(marker)
-          if idx == -1:
+          # Match: os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+          pattern = r"os\.environ\.setdefault\(\s*['\"]DJANGO_SETTINGS_MODULE['\"]\s*,\s*['\"]([^'\"]+)['\"]"
+          m = re.search(pattern, text)
+          if not m:
               sys.stderr.write("::error file=manage.py::FATAL: Could not detect DJANGO_SETTINGS_MODULE. Fix: Ensure manage.py is the standard file created by 'django-admin startproject <project_name> .'.\n")
               sys.exit(1)
 
-          sub = text[idx + len(marker):]
-
-          first_single = sub.find("'")
-          first_double = sub.find('"')
-
-          if first_single == -1 and first_double == -1:
-              sys.stderr.write("::error file=manage.py::FATAL: Could not parse DJANGO_SETTINGS_MODULE string.\n")
-              sys.exit(1)
-
-          if first_single == -1 or (first_double != -1 and first_double < first_single):
-              start = first_double
-          else:
-              start = first_single
-
-          quote = sub[start]
-          end = sub.find(quote, start + 1)
-          if end == -1:
-              sys.stderr.write("::error file=manage.py::FATAL: Unterminated DJANGO_SETTINGS_MODULE string.\n")
-              sys.exit(1)
-
-          value = sub[start + 1:end].strip()
-          if not value:
-              sys.stderr.write("::error file=manage.py::FATAL: Empty DJANGO_SETTINGS_MODULE value.\n")
-              sys.exit(1)
-
-          print(value)
+          print(m.group(1))
           PY
           )
 
