@@ -2,7 +2,8 @@
 name: "Issue 1 – Setup Django & Dependencies"
 about: "Start the Quest by creating your virtual environment, installing Django, and generating requirements.txt"
 title: "Issue 1 – Setup Django & Dependencies"
-labels: issue-1
+labels:
+  - issue-1
 assignees: ""
 ---
 
@@ -61,14 +62,14 @@ python -m venv venv
 ```
 
 When it works, your terminal line will begin with:
-
+```
     (venv)
-
+```
 ------------------------------------------------------------------------
 
 ## ⚠️ Before Installing Django
 
-Many students run into issues at this point --- so pause and check:
+Many students run into issues at this point - so please pause and check:
 
 ### ✅ 1. **Are you inside your virtual environment?**
 
@@ -96,8 +97,6 @@ This prevents outdated-package errors.
 pip install --upgrade pip
 ```
 
-> If you are facing any **issues**, please refer to the
-> Troubleshooting guide at the bottom.
 ------------------------------------------------------------------------
 
 ## 📦 3. Install Django
@@ -128,81 +127,20 @@ Verify it exists:
 ls
 ```
 
-Open it --- you should see a line containing **Django**.
-
-------------------------------------------------------------------------
-
-## 🌱 5. Create Your Issue 1 Branch
-
+Open the file.
 ``` bash
-git checkout -b issue-1-setup
+cat  requirements.txt 
 ```
-
-Your branch **must** start with `issue-1-` or the validator will not
-run.
-
-------------------------------------------------------------------------
-
-## 💾 6. Commit Your Work
-
-``` bash
-git add requirements.txt
-git commit -m "Issue 1: Install Django and create requirements.txt"
+You should see a line containing **Django** in the file.
+```
+(venv) user@Mac django-quest % cat requirements.txt 
+asgiref==3.11.0
+Django==5.2.8
+sqlparse==0.5.3
 ```
 
 ------------------------------------------------------------------------
 
-## 🚀 7. Push Your Branch to GitHub
-
-``` bash
-git push -u origin issue-1-setup
-```
-
-------------------------------------------------------------------------
-
-## 🔁 8. Open a Pull Request
-
-Base branch → `main`\
-Compare branch → `issue-1-setup`
-
-Then click **Create pull request**.
-
-------------------------------------------------------------------------
-
-## 🤖 9. Wait for the Django Quest Checker
-
--   Open the **Checks** tab\
--   You'll see either:
-    -   ✅ Everything correct\
-    -   ❌ Something needs fixing
-
-If it fails:
-
-1.  Read the error message\
-2.  Fix locally\
-3.  Run:
-
-``` bash
-git add .
-git commit -m "Fix Issue 1 CI failure"
-git push
-```
-
-The CI will rerun.
-
-------------------------------------------------------------------------
-
-## 🟢 10. Merge & Close the Issue
-
-Once green:
-
-1.  Click **Merge pull request**\
-2.  Click **Confirm merge**\
-3.  Return to the Issue and click **Close issue**
-
-Closing this issue unlocks **Issue 2**.
-
-------------------------------------------------------------------------
 ## Troubleshooting and Tips
 
 <details>
@@ -305,6 +243,143 @@ pip freeze --local > requirements.txt
 - Does your `requirements.txt` include a `Django==X.X.X` line?
 
 If all yes → you’re good to continue!
+
+</details>
+
+------------------------------------------------------------------------
+
+## 🌱 5. Create Your Issue 1 Branch
+
+``` bash
+git checkout -b issue-1-setup
+```
+
+Your branch **must** start with `issue-1-` or the validator will not
+run.
+
+------------------------------------------------------------------------
+
+## 💾 6. Commit Your Work
+
+``` bash
+git add requirements.txt
+git commit -m "Issue 1: Install Django and create requirements.txt"
+```
+
+------------------------------------------------------------------------
+
+## 🚀 7. Push Your Branch to GitHub
+
+``` bash
+git push -u origin issue-1-setup
+```
+
+------------------------------------------------------------------------
+
+## 🔁 8. Open a Pull Request
+
+Base branch → `main`\
+Compare branch → `issue-1-setup`
+
+Then click **Create pull request**.
+
+Make sure to wait for the checks to pass before clicking **Merge pull request** . You will see the **Django Setup Quest Checker** . This allows CI to validate your work before you proceed to the next issue.
+
+>> More on [Creating a pull request ](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
+------------------------------------------------------------------------
+
+## 🤖 9. Wait for the Django Quest Checker
+
+-   Open the **Checks** tab
+-   You'll see either:
+    -   ✅ Everything correct
+    -   ❌ Something needs fixing
+
+If it fails:
+
+1.  Read the error message
+2.  Fix locally
+> If you are facing any **issues**, please refer to the
+> [Troubleshooting guide](#troubleshooting-and-tips).
+3.  Run:
+
+``` bash
+git add .
+git commit -m "Fix Issue 1 CI failure"
+git push
+```
+<details>
+<summary><strong>🔧 Important: Make All Fixes in <em>Your Issue Branch</em></strong></summary>
+
+When the Django Quest Checker reports a problem, always make your corrections inside the **same branch** you created for this issue — for example:
+
+```
+issue-1-setup
+```
+
+### 🗂 Why this matters
+
+- Each Quest must stay **isolated** in its own branch  
+- The automated checker only evaluates branches that start with the correct prefix (e.g., `issue-1-`)  
+- Fixing things on another branch — especially `main` — will cause the CI to **fail again** or not run at all  
+- Keeping everything for one Quest in one place keeps your Git history clean and avoids merge conflicts later
+
+### 💡 Tips
+
+- Check your current branch anytime:
+  ```bash
+  git branch
+  ```
+
+- If you're on the wrong branch, switch back:
+  ```bash
+  git checkout issue-1-setup
+  ```
+
+- After fixing the issue, commit and push again:
+  ```bash
+  git add .
+  git commit -m "Fix Issue 1 CI failure"
+  git push
+  ```
+
+- Never make Quest changes directly on `main` — it should only receive code through pull requests.
+
+</details>
+
+------------------------------------------------------------------------
+
+## 🟢 10. Merge & Close the Issue
+
+Before merging, **wait for all checks to finish**.  
+Only merge when the status shows **✅ All checks have passed**.
+
+Merging too early (before CI finishes) can cause failures or block the next Quest.
+
+### Once everything is green:
+
+1. Click **Merge pull request**  
+2. Click **Confirm merge**  
+3. Go back to the Issue and click **Close issue**
+
+Closing this issue unlocks **Issue 2**.
+
+<details>
+<summary><strong>📌 How to Close This Issue (and Unlock the Next One)</strong></summary>
+
+When your pull request has been **successfully merged**, you must **close this issue manually** to trigger the next Quest.
+
+### ✅ Steps to Close the Issue
+
+1. Open your repository on GitHub  
+2. Click the **Issues** tab  
+3. Open the issue you just completed  
+4. Scroll down and click **Close issue**  
+5. Wait a few seconds — the **next Quest issue will be created automatically**
+
+> ⚠️ **Important:**  
+> Merging the pull request is **not enough**.  
+> You *must* close the issue yourself for the next Quest to appear.
 
 </details>
 
