@@ -2,7 +2,8 @@
 name: "Issue 3 – App Creation & Registration"
 about: "Create your first Django app and register it in INSTALLED_APPS"
 title: "Issue 3 – App Creation & Registration"
-labels: issue-3
+labels:
+  - issue-3
 assignees: ""
 ---
 
@@ -83,14 +84,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Your app(s)
-    'blog',
+    'blog', # Add a new entry for the app you just created
 ]
 ```
 
-Make sure:
+>>Make sure:
 
-- The string matches your app folder name exactly.
-- It has a trailing comma.
+>> - The string matches your app folder name exactly.
+>> - It has a trailing comma.
 
 ---
 
@@ -104,7 +105,7 @@ python manage.py check
 
 If everything is set up correctly, Django should report **no issues**.
 
-If you see an error, read it carefully — most likely it’s a typo in `INSTALLED_APPS`.
+If you see an error, read it carefully - most likely it’s a typo in `INSTALLED_APPS`.
 
 ---
 
@@ -116,7 +117,7 @@ git add <app_name>/ <project_name>/settings.py
 git commit -m "Issue 3: Create app and register in INSTALLED_APPS"
 ```
 
-Replace `<app_name>` and `<project_name>` appropriately.
+>> Replace `<app_name>` and `<project_name>`.
 
 ---
 
@@ -146,7 +147,7 @@ The CI now checks that:
 Red (❌)?  
 
 - Open the **Checks** tab.  
-- Fix whatever the error message describes.  
+- Fix whatever the error message describes. (Remember to do this in your issue branch!)
 - Commit and push again.
 
 Green (✅)?
@@ -162,6 +163,26 @@ Green (✅)?
 3. Click **Close issue**.
 
 Closing this issue (labelled `issue-3`) will automatically open **Issue 4**.
+
+<details>
+<summary><strong>📌 How to Close This Issue (and Unlock the Next One)</strong></summary>
+
+When your pull request has been **successfully merged**, you must **close this issue manually** to trigger the next Quest.
+
+### ✅ Steps to Close the Issue
+
+1. Open your repository on GitHub  
+2. Click the **Issues** tab  
+3. Open the issue you just completed  
+4. Scroll down and click **Close issue**  
+5. Wait a few seconds — the **next Quest issue will be created automatically**
+
+> ⚠️ **Important:**  
+> Merging the pull request is **not enough**.  
+> You *must* close the issue yourself for the next Quest to appear.
+
+</details>
+
 
 ---
 
