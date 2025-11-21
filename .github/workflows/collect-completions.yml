@@ -48,22 +48,19 @@ jobs:
 
           echo "🔍 Searching GitHub for QUEST_COMPLETION_LOG.md with unique TC marker..."
 
-          # Use + for spaces in the query.
-          # We search for:
+          # Search public code for:
           # - filename: QUEST_COMPLETION_LOG.md
-          # - containing text: DJANGO_SETUP_QUEST_COMPLETION_TC
-          SEARCH_QUERY='filename:QUEST_COMPLETION_LOG.md+DJANGO_SETUP_QUEST_COMPLETION_TC'
+          # - containing DJANGO_SETUP_QUEST_COMPLETION_TC
+          SEARCH_URL="https://api.github.com/search/code?q=filename:QUEST_COMPLETION_LOG.md+DJANGO_SETUP_QUEST_COMPLETION_TC&per_page=100"
 
-          # Correct endpoint is 'search/code' (no leading slash).
+          # Use curl + jq instead of gh api to avoid path/404 issues
           REPOS=$(
-            gh api \
+            curl -sS \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
               -H "Accept: application/vnd.github+json" \
-              search/code \
-              -f q="$SEARCH_QUERY" \
-              -f per_page=100 \
-              --paginate \
-              --jq '.items[].repository.full_name' 2>/dev/null \
-            | sort -u || true
+              "${SEARCH_URL}" \
+            | jq -r '.items[].repository.full_name // empty' \
+            | sort -u
           )
 
           DASHBOARD_FILE="COMPLETED_QUESTS_DASHBOARD.md"
@@ -126,18 +123,22 @@ jobs:
             echo "📂 Processing $repo ..."
 
             # Fetch QUEST_COMPLETION_LOG.md content (assumed at repo root)
-            CONTENT_B64=$(gh api \
-              -H "Accept: application/vnd.github+json" \
-              "repos/${repo}/contents/QUEST_COMPLETION_LOG.md" \
-              --jq '.content // empty' 2>/dev/null || true)
+            CONTENT_JSON=$(
+              curl -sS \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${repo}/contents/QUEST_COMPLETION_LOG.md"
+            )
 
-            if [ -z "$CONTENT_B64" ]; then
+            CONTENT_B64=$(echo "$CONTENT_JSON" | jq -r '.content // empty')
+
+            if [ -z "$CONTENT_B64" ] || [ "$CONTENT_B64" = "null" ]; then
               echo "⚠️  No QUEST_COMPLETION_LOG.md found in $repo. Skipping."
               continue
             fi
 
             # Decode base64 to temp file
-            echo "$CONTENT_B64" | base64 -d > "$TMP_LOG" || {
+            echo "$CONTENT_B64" | base64 -d > "$TMP_LOG" 2>/dev/null || {
               echo "⚠️  Failed to decode QUEST_COMPLETION_LOG.md for $repo. Skipping."
               continue
             }
@@ -168,10 +169,14 @@ jobs:
             [ -z "$COMPLETED_AT" ] && COMPLETED_AT="unknown"
 
             REPO_NAME=$(basename "$repo")
-            REPO_CREATED_AT=$(gh api \
-              -H "Accept: application/vnd.github+json" \
-              "repos/${repo}" \
-              --jq '.created_at // empty' 2>/dev/null || true)
+
+            REPO_CREATED_AT=$(
+              curl -sS \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${repo}" \
+              | jq -r '.created_at // empty'
+            )
 
             [ -z "$REPO_CREATED_AT" ] && REPO_CREATED_AT="unknown"
 
@@ -221,7 +226,7 @@ jobs:
               echo "| Month (UTC) | Completions |"
               echo "|-------------|-------------|"
               sort "$TMP_MONTHS" | uniq -c | while read -r count month; do
-                echo "| $month | $count | $count |" | sed 's/| \(.*\) | \(.*\) |/\| '"$month"' \| '"$count"' \|/'
+                echo "| $month | $count |"
               done
               echo
             } >> "${DASHBOARD_FILE}"
