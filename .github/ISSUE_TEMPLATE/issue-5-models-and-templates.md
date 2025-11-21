@@ -2,7 +2,8 @@
 name: "Issue 5 – Models & Migrations"
 about: "Create a Django model, run makemigrations and migrate successfully"
 title: "Issue 5 – Models & Migrations"
-labels: issue-5
+labels:
+  - issue-5
 assignees: ""
 ---
 
@@ -17,7 +18,7 @@ In this step you will:
 
 ---
 
-## 🔄 1. Update local `main` and create a new branch
+## 🔄 1. Update local `main` and create a branch
 
 ```bash
 git checkout main
@@ -100,6 +101,17 @@ class PostAdmin(admin.ModelAdmin):
 
 If you chose a different model name, update the import and registration.
 
+### 💡 Why registering your model in `admin.py` is a good idea
+
+Adding your model to the Django admin gives you:
+
+- **A visual dashboard** for viewing, adding, editing, and deleting your model data  
+- **A quick way to verify** your model fields, timestamps, and relationships are working correctly  
+- **A debugging tool** — if something is wrong with your model or database, you’ll often spot it early through admin  
+- **A faster workflow** during development (no need to write views or templates just to check data)
+
+Even though it’s optional for this Quest, using the admin is a great habit — it helps you catch mistakes early and speeds up development.
+
 ---
 
 ## 💾 6. Commit your work
@@ -148,6 +160,25 @@ Once CI is green:
 2. Close this Issue.
 
 Closing this issue (labelled `issue-5`) will automatically open **Issue 6**.
+
+<details>
+<summary><strong>📌 How to Close This Issue (and Unlock the Next One)</strong></summary>
+
+When your pull request has been **successfully merged**, you must **close this issue manually** to trigger the next Quest.
+
+### ✅ Steps to Close the Issue
+
+1. Open your repository on GitHub  
+2. Click the **Issues** tab  
+3. Open the issue you just completed  
+4. Scroll down and click **Close issue**  
+5. Wait a few seconds — the **next Quest issue will be created automatically**
+
+> ⚠️ **Important:**  
+> Merging the pull request is **not enough**.  
+> You *must* close the issue yourself for the next Quest to appear.
+
+</details>
 
 ---
 
