@@ -2,7 +2,8 @@
 name: "Issue 4 – URL Routing & View Test"
 about: "Create a view in your app and route the root URL ('/') to it"
 title: "Issue 4 – URL Routing & View Test"
-labels: issue-4
+labels:
+  - issue-4
 assignees: ""
 ---
 
@@ -65,7 +66,7 @@ This means: when the app’s URL config is included at some prefix, the empty pa
 
 ## 🧩 4. Include your app URLs in the project URLs
 
-1. Open **project** `urls.py`, e.g. `config/urls.py`.
+1. Open **project** `urls.py`, e.g. `django_project/urls.py`.
 2. Import `include`:
 
 ```python
@@ -157,6 +158,26 @@ When CI is green:
 2. Close this Issue.
 
 Closing this issue (labelled `issue-4`) will automatically open **Issue 5**.
+
+<details>
+<summary><strong>📌 How to Close This Issue (and Unlock the Next One)</strong></summary>
+
+When your pull request has been **successfully merged**, you must **close this issue manually** to trigger the next Quest.
+
+### ✅ Steps to Close the Issue
+
+1. Open your repository on GitHub  
+2. Click the **Issues** tab  
+3. Open the issue you just completed  
+4. Scroll down and click **Close issue**  
+5. Wait a few seconds — the **next Quest issue will be created automatically**
+
+> ⚠️ **Important:**  
+> Merging the pull request is **not enough**.  
+> You *must* close the issue yourself for the next Quest to appear.
+
+</details>
+
 
 ---
 
