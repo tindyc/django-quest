@@ -75,7 +75,6 @@ jobs:
         if: steps.next.outputs.next_title != ''
         uses: peter-evans/create-issue-from-file@v5
         with:
-          # Uses built-in GITHUB_TOKEN; no PAT needed
           token: ${{ secrets.GITHUB_TOKEN }}
           title: ${{ steps.next.outputs.next_title }}
           content-filepath: ${{ steps.next.outputs.next_file }}
@@ -97,23 +96,64 @@ jobs:
         shell: bash
         run: |
           CONGRATS_MESSAGE=$(cat <<-'EOF'
+          <div align="center">
 
+          # 🎉 Django Quest Complete!
 
-          ## 🎉 QUEST COMPLETE: CONGRATULATIONS! 🎉
+          [![Quest Status: Completed](https://img.shields.io/badge/Quest%20Status-Completed-4caf50?style=for-the-badge&logo=django&logoColor=white)](#-quest-complete-congratulations-)
 
-          **You have successfully completed the entire Django Quest Workshop!** You installed Django, configured the project structure, created your first app, set up routing and views, defined models, ran migrations, and prepared the project for administration.
+          **You’ve successfully completed the entire Django Quest Workshop.**  
+          Your project is now a solid foundation to build your full Django application.
 
-          This project is now a solid foundation for building your full application.
+          </div>
 
           ---
-          ### Next Steps
 
-          1. **Run locally:** `python manage.py runserver`  
-          2. **Login:** Visit `/admin/` and log in with your superuser to manage your data.
+          ### ✅ What you’ve achieved
+
+          - Set up a Python virtual environment and installed Django  
+          - Created and configured your Django project  
+          - Built your first Django app and wired up URLs & views  
+          - Defined models and ran migrations  
+          - Created a superuser and explored the Django admin  
+
+          ---
+
+          ### 🚀 Next steps
+
+          1. **Run the project locally**
+
+             ```bash
+             python manage.py runserver
+             ```
+
+          2. **Log into the admin**
+
+             - Visit: `http://127.0.0.1:8000/admin/`
+             - Log in with your superuser credentials
+
+          3. **Keep building**
+
+             - Add more models, views, and templates  
+             - Customize the admin  
+             - Start shaping this into your real application ✨
+
+          ---
+
+          <details>
+          <summary><strong>💡 Not sure what to build next?</strong></summary>
+
+          - A personal blog or portfolio  
+          - A simple task manager / to-do app  
+          - A small catalog (books, games, recipes, anything!)  
+          - A learning journal to track what you build next  
+
+          </details>
           EOF
           )
 
-          echo "$CONGRATS_MESSAGE" >> README.md
+          # Prepend congratulations to the TOP of README.md
+          { printf "%s\n\n" "$CONGRATS_MESSAGE"; cat README.md; } > README.tmp && mv README.tmp README.md
 
       - name: Commit and Push README changes
         uses: stefanzweifel/git-auto-commit-action@v5
