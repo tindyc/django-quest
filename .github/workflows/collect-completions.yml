@@ -1,0 +1,206 @@
+name: Collect Django Quest Completions
+
+on:
+  workflow_dispatch:          # Run manually from Actions tab
+  schedule:
+    - cron: "0 6 * * 1"       # every Monday at 06:00 UTC
+
+jobs:
+  collect_completions:
+    # Only run in the original/template repo, not in student copies
+    if: github.repository == 'tindyc/django-quest'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write         # Needed to commit the dashboard MD file
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Collect completed quest repositories via GitHub code search
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "🔍 Searching GitHub for QUEST_COMPLETION_LOG.md with unique TC marker..."
+
+          # Super-specific marker to avoid irrelevant results
+          SEARCH_QUERY='filename:QUEST_COMPLETION_LOG.md "DJANGO_SETUP_QUEST_COMPLETION_TC"'
+
+          REPOS=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /search/code \
+            -f "q=${SEARCH_QUERY}" \
+            -f per_page=100 \
+            --paginate \
+            --jq '.items[].repository.full_name' | sort -u || true)
+
+          DASHBOARD_FILE="COMPLETED_QUESTS_DASHBOARD.md"
+
+          TOTAL=0
+          EARLIEST=""
+          LATEST=""
+
+          TMP_LOG="$(mktemp)"
+          TMP_MONTHS="$(mktemp)"
+
+          # Start writing the dashboard
+          {
+            echo "# 📊 Django Quest – Completion Dashboard"
+            echo
+            echo "_Auto-generated from GitHub search on $(date -u +"%Y-%m-%d %H:%M UTC")._"
+            echo
+          } > "${DASHBOARD_FILE}"
+
+          if [ -z "${REPOS}" ]; then
+            echo "ℹ️ No completed quests found."
+            {
+              echo "## Summary"
+              echo
+              echo "- **Total completed repositories:** 0"
+              echo "- No completions found yet."
+            } >> "${DASHBOARD_FILE}"
+            exit 0
+          fi
+
+          echo "✅ Found repositories:"
+          echo "${REPOS}"
+
+          # We'll collect details rows as we go
+          DETAILS_TABLE="$(mktemp)"
+
+          # Header for details table
+          {
+            echo "| # | Repository | GitHub User | Project Name | Repo Created (UTC) | Quest Completed (UTC) |"
+            echo "|---|------------|-------------|--------------|---------------------|------------------------|"
+          } > "${DETAILS_TABLE}"
+
+          INDEX=1
+
+          while read -r repo; do
+            [ -z "$repo" ] && continue
+
+            echo "📂 Processing $repo ..."
+
+            # Fetch QUEST_COMPLETION_LOG.md content (assumed at repo root)
+            CONTENT_B64=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${repo}/contents/QUEST_COMPLETION_LOG.md" \
+              --jq '.content // empty' || true)
+
+            if [ -z "$CONTENT_B64" ]; then
+              echo "⚠️  No QUEST_COMPLETION_LOG.md found in $repo. Skipping."
+              continue
+            fi
+
+            echo "$CONTENT_B64" | base64 -d > "$TMP_LOG" || {
+              echo "⚠️  Failed to decode QUEST_COMPLETION_LOG.md for $repo. Skipping."
+              continue
+            }
+
+            # Extract LAST recorded user and completion timestamp
+            LAST_USER_LINE=$(grep -E "^- \*\*User:\*\*" "$TMP_LOG" | tail -n 1 || true)
+            LAST_TIME_LINE=$(grep -E "^- \*\*Completed at \(UTC\):\*\*" "$TMP_LOG" | tail -n 1 || true)
+
+            if [ -z "$LAST_USER_LINE" ] || [ -z "$LAST_TIME_LINE" ]; then
+              echo "⚠️  Could not find expected lines in log for $repo. Skipping."
+              continue
+            fi
+
+            # Parse username and completion time
+            USERNAME=$(echo "$LAST_USER_LINE" | sed 's/^- \*\*User:\*\* @//; s/[[:space:]]*$//')
+            COMPLETED_AT=$(echo "$LAST_TIME_LINE" | sed 's/^- \*\*Completed at (UTC):\*\* //; s/[[:space:]]*$//')
+
+            [ -z "$USERNAME" ] && USERNAME="unknown"
+            [ -z "$COMPLETED_AT" ] && COMPLETED_AT="unknown"
+
+            # Extract project name and repo created date from GitHub API
+            REPO_NAME=$(basename "$repo")
+            REPO_CREATED_AT=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "repos/${repo}" \
+              --jq '.created_at // empty' || true)
+
+            [ -z "$REPO_CREATED_AT" ] && REPO_CREATED_AT="unknown"
+
+            # Update summary stats if completed_at looks like an ISO timestamp
+            if [[ "$COMPLETED_AT" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
+              # Month key YYYY-MM for grouping
+              MONTH_KEY=${COMPLETED_AT:0:7}
+              echo "$MONTH_KEY" >> "$TMP_MONTHS"
+
+              # Earliest / latest comparisons (ISO 8601 is lexicographically sortable)
+              if [ -z "$EARLIEST" ] || [[ "$COMPLETED_AT" < "$EARLIEST" ]]; then
+                EARLIEST="$COMPLETED_AT"
+              fi
+              if [ -z "$LATEST" ] || [[ "$COMPLETED_AT" > "$LATEST" ]]; then
+                LATEST="$COMPLETED_AT"
+              fi
+            fi
+
+            # Append row to the details table
+            {
+              echo "| $INDEX | [$repo](https://github.com/$repo) | [@$USERNAME](https://github.com/$USERNAME) | $REPO_NAME | $REPO_CREATED_AT | $COMPLETED_AT |"
+            } >> "${DETAILS_TABLE}"
+
+            INDEX=$((INDEX+1))
+            TOTAL=$((TOTAL+1))
+          done <<< "${REPOS}"
+
+          # Write summary section
+          {
+            echo "## Summary"
+            echo
+            echo "- **Total completed repositories:** ${TOTAL}"
+            if [ -n "$EARLIEST" ]; then
+              echo "- **First completion:** ${EARLIEST}"
+            fi
+            if [ -n "$LATEST" ]; then
+              echo "- **Most recent completion:** ${LATEST}"
+            fi
+            echo
+          } >> "${DASHBOARD_FILE}"
+
+          # Monthly breakdown
+          {
+            echo "## Completions by Month (UTC)"
+            echo
+          } >> "${DASHBOARD_FILE}"
+
+          if [ -s "$TMP_MONTHS" ]; then
+            {
+              echo "| Month (UTC) | Completions |"
+              echo "|-------------|-------------|"
+              sort "$TMP_MONTHS" | uniq -c | while read -r count month; do
+                echo "| $month | $count |"
+              done
+              echo
+            } >> "${DASHBOARD_FILE}"
+          else
+            {
+              echo "_No valid completion timestamps to summarise by month._"
+              echo
+            } >> "${DASHBOARD_FILE}"
+          fi
+
+          # Detailed table
+          {
+            echo "## Completed Repositories"
+            echo
+          } >> "${DASHBOARD_FILE}"
+
+          cat "${DETAILS_TABLE}" >> "${DASHBOARD_FILE}"
+
+          rm -f "$TMP_LOG" "$TMP_MONTHS" "$DETAILS_TABLE"
+
+          echo "✅ Wrote completion dashboard to ${DASHBOARD_FILE}"
+
+      - name: Commit and push completion dashboard
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update Django Quest completion dashboard"
+          branch: main
