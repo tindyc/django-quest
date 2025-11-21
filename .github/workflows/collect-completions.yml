@@ -13,13 +13,33 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write         # Needed to commit the dashboard MD file
+      contents: write         # push to stats branch
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (main branch)
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0      # Ensure we can create/switch branches
 
-      - name: Collect completed quest repositories via GitHub code search
+      - name: Switch to or create stats branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "🔀 Preparing stats branch..."
+
+          # Check if remote stats branch exists
+          if git ls-remote --exit-code --heads origin stats >/dev/null 2>&1; then
+            echo "✅ Remote stats branch exists. Checking it out..."
+            git checkout stats
+            git pull origin stats
+          else
+            echo "ℹ️ stats branch does not exist yet. Creating from main..."
+            git checkout -b stats
+          fi
+
+      - name: Collect completed quest repositories and generate dashboard
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
@@ -48,11 +68,13 @@ jobs:
           TMP_LOG="$(mktemp)"
           TMP_MONTHS="$(mktemp)"
 
+          TS=$(date -u +"%Y-%m-%d %H:%M UTC")
+
           # Start writing the dashboard
           {
-            echo "# 📊 Django Quest – Completion Dashboard"
+            echo "# 📊 Django Setup Quest – Completion Dashboard"
             echo
-            echo "_Auto-generated from GitHub search on $(date -u +"%Y-%m-%d %H:%M UTC")._"
+            echo "_Auto-generated from GitHub search on ${TS}._"
             echo
           } > "${DASHBOARD_FILE}"
 
@@ -63,17 +85,27 @@ jobs:
               echo
               echo "- **Total completed repositories:** 0"
               echo "- No completions found yet."
+              echo
+              echo "## Completions by Month (UTC)"
+              echo
+              echo "_No valid completion timestamps to summarise by month._"
+              echo
+              echo "## Completed Repositories"
+              echo
+              echo "| # | Repository | GitHub User | Project Name | Repo Created (UTC) | Quest Completed (UTC) |"
+              echo "|---|------------|-------------|--------------|---------------------|------------------------|"
             } >> "${DASHBOARD_FILE}"
+
+            rm -f "$TMP_LOG" "$TMP_MONTHS"
             exit 0
           fi
 
           echo "✅ Found repositories:"
           echo "${REPOS}"
 
-          # We'll collect details rows as we go
+          # We'll collect detail rows as we go
           DETAILS_TABLE="$(mktemp)"
 
-          # Header for details table
           {
             echo "| # | Repository | GitHub User | Project Name | Repo Created (UTC) | Quest Completed (UTC) |"
             echo "|---|------------|-------------|--------------|---------------------|------------------------|"
@@ -102,7 +134,6 @@ jobs:
               continue
             }
 
-            # Extract LAST recorded user and completion timestamp
             LAST_USER_LINE=$(grep -E "^- \*\*User:\*\*" "$TMP_LOG" | tail -n 1 || true)
             LAST_TIME_LINE=$(grep -E "^- \*\*Completed at \(UTC\):\*\*" "$TMP_LOG" | tail -n 1 || true)
 
@@ -111,14 +142,12 @@ jobs:
               continue
             fi
 
-            # Parse username and completion time
             USERNAME=$(echo "$LAST_USER_LINE" | sed 's/^- \*\*User:\*\* @//; s/[[:space:]]*$//')
             COMPLETED_AT=$(echo "$LAST_TIME_LINE" | sed 's/^- \*\*Completed at (UTC):\*\* //; s/[[:space:]]*$//')
 
             [ -z "$USERNAME" ] && USERNAME="unknown"
             [ -z "$COMPLETED_AT" ] && COMPLETED_AT="unknown"
 
-            # Extract project name and repo created date from GitHub API
             REPO_NAME=$(basename "$repo")
             REPO_CREATED_AT=$(gh api \
               -H "Accept: application/vnd.github+json" \
@@ -129,11 +158,9 @@ jobs:
 
             # Update summary stats if completed_at looks like an ISO timestamp
             if [[ "$COMPLETED_AT" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
-              # Month key YYYY-MM for grouping
               MONTH_KEY=${COMPLETED_AT:0:7}
               echo "$MONTH_KEY" >> "$TMP_MONTHS"
 
-              # Earliest / latest comparisons (ISO 8601 is lexicographically sortable)
               if [ -z "$EARLIEST" ] || [[ "$COMPLETED_AT" < "$EARLIEST" ]]; then
                 EARLIEST="$COMPLETED_AT"
               fi
@@ -142,7 +169,6 @@ jobs:
               fi
             fi
 
-            # Append row to the details table
             {
               echo "| $INDEX | [$repo](https://github.com/$repo) | [@$USERNAME](https://github.com/$USERNAME) | $REPO_NAME | $REPO_CREATED_AT | $COMPLETED_AT |"
             } >> "${DETAILS_TABLE}"
@@ -151,7 +177,7 @@ jobs:
             TOTAL=$((TOTAL+1))
           done <<< "${REPOS}"
 
-          # Write summary section
+          # Summary section
           {
             echo "## Summary"
             echo
@@ -187,7 +213,7 @@ jobs:
             } >> "${DASHBOARD_FILE}"
           fi
 
-          # Detailed table
+          # Detailed table section
           {
             echo "## Completed Repositories"
             echo
@@ -199,8 +225,8 @@ jobs:
 
           echo "✅ Wrote completion dashboard to ${DASHBOARD_FILE}"
 
-      - name: Commit and push completion dashboard
+      - name: Commit dashboard to stats branch
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update Django Quest completion dashboard"
-          branch: main
+          branch: stats
