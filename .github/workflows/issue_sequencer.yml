@@ -155,6 +155,25 @@ jobs:
           # Prepend congratulations to the TOP of README.md
           { printf "%s\n\n" "$CONGRATS_MESSAGE"; cat README.md; } > README.tmp && mv README.tmp README.md
 
+      - name: Record completion in QUEST_COMPLETION_LOG.md
+        shell: bash
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          {
+            echo "## Django Setup Quest Completion"
+            echo ""
+            echo "MARKER: DJANGO_SETUP_QUEST_COMPLETION_TC"
+            echo ""
+            echo "- **Quest ID:** django-setup-quest-tc"
+            echo "- **User:** @${{ github.actor }}"
+            echo "- **Repository:** https://github.com/${{ github.repository }}"
+            echo "- **Workflow Run:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- **Completed at (UTC):** ${TIMESTAMP}"
+            echo ""
+            echo "---"
+            echo ""
+          } >> QUEST_COMPLETION_LOG.md
+
       - name: Commit and Push README changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
