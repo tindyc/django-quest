@@ -2,7 +2,8 @@
 name: "Issue 2 – Project Core: Create Project Structure"
 about: "Create your main Django project with manage.py and settings.py"
 title: "Issue 2 – Project Core: Create Project Structure"
-labels: issue-2
+labels:
+  - issue-2
 assignees: ""
 ---
 
@@ -37,7 +38,7 @@ git checkout -b issue-2-project-core
 
 ## 🏗 2. Create your Django project
 
-You can pick any project name you like, such as `config`, `core`, or `mysite`.  
+You can pick any project name you like, such as `django_project`, `community_platform`, or `mysite`.  
 In this quest we’ll call it `<project_name>` in the instructions — replace it with **your** chosen name.
 
 > 🔑 The final dot `.` at the end of the command is **very important**.  
@@ -48,19 +49,18 @@ Run:
 ```bash
 django-admin startproject <project_name> .
 ```
+> Please remember the dot `.`at the end!
 
-Examples:
+Example:
 
 ```bash
-django-admin startproject config .
-# or
-django-admin startproject core .
+django-admin startproject django_project .
 ```
 
 This should create:
 
 - `manage.py`
-- A folder named after your project (e.g. `config/` or `core/`)
+- A folder named after your project (e.g. `django_project/`)
   - `__init__.py`
   - `settings.py`
   - `urls.py`
@@ -94,7 +94,7 @@ Press **Ctrl + C** (or **Cmd + C** in the terminal) to stop the server.
 In VS Code:
 
 - You should see `manage.py` at the project root.
-- You should see your project folder (e.g. `config/`) with `settings.py` and `urls.py` inside.
+- You should see your project folder (e.g. `django_project/`) with `settings.py` and `urls.py` inside.
 
 ---
 
@@ -106,7 +106,7 @@ git add manage.py <project_name>/
 git commit -m "Issue 2: Create Django project core"
 ```
 
-(Replace `<project_name>` with your actual project folder, e.g. `config/`.)
+(Replace `<project_name>` with your actual project folder, e.g. `django_project/`.)
 
 ---
 
@@ -149,6 +149,11 @@ If it’s red (❌):
 
 ## 🟢 9. Merge the PR & close this Issue
 
+Before merging, **wait for all checks to finish**.  
+Only merge when the status shows **✅ All checks have passed**.
+
+Merging too early (before CI finishes) can cause failures or block the next Quest.
+
 Once CI is **green**:
 
 1. Click **Merge pull request**.
@@ -156,6 +161,25 @@ Once CI is **green**:
 3. Click **Close issue**.
 
 Closing this issue (labelled `issue-2`) will automatically open **Issue 3** for you.
+
+<details>
+<summary><strong>📌 How to Close This Issue (and Unlock the Next One)</strong></summary>
+
+When your pull request has been **successfully merged**, you must **close this issue manually** to trigger the next Quest.
+
+### ✅ Steps to Close the Issue
+
+1. Open your repository on GitHub  
+2. Click the **Issues** tab  
+3. Open the issue you just completed  
+4. Scroll down and click **Close issue**  
+5. Wait a few seconds — the **next Quest issue will be created automatically**
+
+> ⚠️ **Important:**  
+> Merging the pull request is **not enough**.  
+> You *must* close the issue yourself for the next Quest to appear.
+
+</details>
 
 ---
 
