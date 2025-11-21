@@ -122,7 +122,7 @@ jobs:
           echo "✅ Detected project name: $PROJECT_NAME at $SETTINGS_PATH"
 
       # ---------------------------------------
-      # Issue 3 – App creation & registration (soft check)
+      # Issue 3 – App creation & registration 
       # ---------------------------------------
       - name: Verify app creation & registration (Issue 3 Check)
         if: |
@@ -130,10 +130,48 @@ jobs:
           fromJSON(steps.issue_info.outputs.issue_number) >= 3
         shell: bash
         run: |
-          echo "ℹ️ Skipping strict automated checks for Issue 3 (app creation & registration)."
-          echo "   Make sure you have:"
-          echo "   - Created a Django app with 'python manage.py startapp <app_name>'"
-          echo "   - Added '<app_name>' to INSTALLED_APPS in ${{ steps.project_info.outputs.project_name }}/settings.py"
+          echo "🔎 Checking Django app creation & registration (Issue 3)…"
+          set -e
+
+          PROJECT_NAME="${{ steps.project_info.outputs.project_name }}"
+          SETTINGS_PATH="$PROJECT_NAME/settings.py"
+
+          if [ -z "$PROJECT_NAME" ]; then
+            echo "::error::FATAL: PROJECT_NAME from Issue 2 was not detected. Make sure Issue 2 passed successfully."
+            exit 1
+          fi
+
+          if [ ! -f "$SETTINGS_PATH" ]; then
+            echo "::error file=$SETTINGS_PATH::FATAL: settings.py not found while running Issue 3 check. Did you complete Issue 2 and commit your Django project?"
+            exit 1
+          fi
+
+          echo "ℹ️ Using settings file at: $SETTINGS_PATH"
+
+          # Find app modules that contain apps.py (i.e., real Django apps), excluding the project package
+          APP_MODULES=$(find . -maxdepth 2 -mindepth 1 -type f -name "apps.py" | grep -v "./$PROJECT_NAME/" || true)
+
+          if [ -z "$APP_MODULES" ]; then
+            echo "::error::FATAL: No Django app with an apps.py file was found."
+            echo "       Fix: From your project root, run 'python manage.py startapp <app_name>' and commit the new app."
+            exit 1
+          fi
+
+          # Take the first discovered app as the candidate
+          FIRST_APP_APPS_PY=$(echo "$APP_MODULES" | head -n 1)
+          APP_DIR=$(dirname "$FIRST_APP_APPS_PY")
+          APP_NAME=$(basename "$APP_DIR")
+
+          echo "ℹ️ Detected app candidate: '$APP_NAME' (from $FIRST_APP_APPS_PY)"
+
+          # Check if APP_NAME or its AppConfig is registered in INSTALLED_APPS
+          if ! grep -Eq "['\"]$APP_NAME['\"]|['\"]$APP_NAME\.apps\.[A-Za-z0-9_]+Config['\"]" "$SETTINGS_PATH"; then
+            echo "::error file=$SETTINGS_PATH::FATAL: Could not find '$APP_NAME' registered in INSTALLED_APPS."
+            echo "       Fix: Add '$APP_NAME' (or its AppConfig, e.g. '$APP_NAME.apps.YourAppConfig') to INSTALLED_APPS in $SETTINGS_PATH."
+            exit 1
+          fi
+
+          echo "✅ App '$APP_NAME' appears to exist and is registered in INSTALLED_APPS."
 
       # ---------------------------------------
       # Issue 4 – URL routing & view
