@@ -5,11 +5,9 @@
 
 # 🚀 The Django Setup Quest: Build Your First Django Project!
 
-![Django Logo](https://img.icons8.com/color/452/django.png)
-
 Welcome to the **Django Setup Quest** — an interactive, automated, step-by-step journey that teaches you how to build a fully working Django project using **GitHub Issues**, **Pull Requests**, and **GitHub Actions**.
 
-Whether you're building a blog, a to-do list manager, an online shop, or your own idea — this Quest gives you the solid foundation every Django developer needs.
+Whether you're building a blog, a to-do list manager, an online shop, or your own idea — this Quest gives you the solid foundation everytime you start a django project!
 
 ---
 
@@ -384,10 +382,18 @@ You’ll build:
 - 🛡️ Admin + Superuser  
 - ⚙️ A complete, working backend foundation  
 
-Good luck — may your migrations always succeed and your debugging be swift! 🧙‍♂️⚡  
+Good luck 🧙‍♂️⚡  
 
 ---
 
-*Happy Coding!* 💚
+## 🆘 Need Help?
 
-Author: Tindy
+If you're stuck, something isn't working, or you just need a hint — feel free to reach out to me directly.
+
+## 📬 Contact Me on Discord
+
+<a href="https://discord.com/users/tindychan">
+  <img src="https://img.shields.io/badge/Message%20Me%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" />
+</a>
+
+> I’m happy to help with setup issues, debugging, or anything in the Django Quest.
