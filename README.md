@@ -330,3 +330,5 @@ Good luck ⚡🧙‍♂️
 </a>
 
 > Happy to help with debugging, installation issues, or anything in the Quest.
+
+Tindy
