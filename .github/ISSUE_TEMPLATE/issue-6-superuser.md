@@ -107,6 +107,35 @@ Another workflow may append a **“Quest Complete”** message to your README.
 
 ---
 
+## 📝 Summary
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+### 🌟 What You Did  
+- Created superuser  
+- Logged into Django admin  
+- Checked your model appears
+
+### 🔧 Commands
+
+#### Create superuser
+```bash
+python manage.py createsuperuser
+```
+
+#### Run server to access admin
+```bash
+python manage.py runserver
+```
+
+Then visit:  
+`http://127.0.0.1:8000/admin/`
+
+</details>
+
+---
+
 ## 🎉 QUEST COMPLETE!
 
 You have now:
