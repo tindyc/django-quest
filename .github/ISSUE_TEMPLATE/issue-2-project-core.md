@@ -183,6 +183,33 @@ When your pull request has been **successfully merged**, you must **close this i
 
 ---
 
+## 📝 Summary
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+### 🌟 What You Did  
+- Created your first Django project  
+- Ran the development server  
+- Confirmed Django is working
+
+### 🔧 Commands
+
+#### Create project
+```bash
+django-admin startproject <project-name> .
+```
+>> Please remember the dot `.`!
+
+#### Run server
+```bash
+python manage.py runserver
+```
+
+</details>
+
+---
+
 ## 🎉 Nice work!
 
 Your Django project core is now created.  
