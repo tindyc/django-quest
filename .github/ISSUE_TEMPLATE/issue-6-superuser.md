@@ -102,8 +102,26 @@ When CI is green:
 1. Merge the PR.
 2. Close this Issue.
 
-Closing this final issue completes the Quest.  
-Another workflow may append a **“Quest Complete”** message to your README.
+Closing this issue (labelled `issue-6`) will automatically open **Issue 7**.
+
+<details>
+<summary><strong>📌 How to Close This Issue (and Unlock the Next One)</strong></summary>
+
+When your pull request has been **successfully merged**, you must **close this issue manually** to trigger the next Quest.
+
+### ✅ Steps to Close the Issue
+
+1. Open your repository on GitHub  
+2. Click the **Issues** tab  
+3. Open the issue you just completed  
+4. Scroll down and click **Close issue**  
+5. Wait a few seconds — the **next Quest issue will be created automatically**
+
+> ⚠️ **Important:**  
+> Merging the pull request is **not enough**.  
+> You *must* close the issue yourself for the next Quest to appear.
+
+</details>
 
 ---
 
@@ -133,103 +151,4 @@ Then visit:
 `http://127.0.0.1:8000/admin/`
 
 </details>
-
----
-
-## 🎉 QUEST COMPLETE!
-
-You have now:
-
-- Created and configured a Django project
-- Installed dependencies and captured them in `requirements.txt`
-- Created and registered a Django app
-- Wired URLs to views and served a real HTTP response
-- Defined models, created migrations, and applied them
-- Created a superuser and logged into the Django admin
-
-This project is now a solid foundation for any Django application you want to build next. 🚀
-
----
-
-## 🏅 Congraulations – Next Steps
-
-![Quest Complete Badge](https://img.shields.io/badge/Django%20Quest-Completed-1DB660?style=for-the-badge&logo=django)
-
-You’ve finished the entire Django Quest — that’s a huge achievement!  
-Your project now has models, migrations, admin access, views, and a working development environment.
-
-Here are some powerful directions you can take next:
-
----
-
-### 🚀 Build More Features
-Use what you’ve learned to expand the project:
-- Add more models (Comments, Profiles, Categories, etc.)
-- Create views that show your model data
-- Build templates with real HTML pages
-- Add pagination, filtering, or search
-
-These steps transform your starter project into a real web app.
-
----
-
-### 🧩 Add Forms & User Interaction
-Let users interact with your data:
-
-- Create forms using `forms.ModelForm`
-- Add create/edit/delete pages
-- Add form validation and error messages
-
-This is where your project starts feeling alive.
-
----
-
-### 🔐 Add Authentication
-You already created a superuser — now add real user accounts:
-
-- Registration page
-- Login / logout
-- User dashboard
-- Profile settings
-
-This unlocks almost every modern web-app pattern.
-
----
-
-### 🎨 Improve the Frontend
-Make your project look good:
-
-- Add a base template
-- Use Bootstrap or Tailwind CSS
-- Add navigation, layout, and components
-
-Beautiful UI dramatically improves the experience.
-
----
-
-### 🌍 Deploy Your Project
-Make your site live on the internet:
-
-- Heroku
-- Railway
-- Render
-
-Deployment helps you understand how Django runs in production.
-
----
-
-### 📦 Turn It Into a Portfolio Project
-Now that you’ve built something real, polish it and showcase it:
-
-- Add features that interest you
-- Clean up your README
-- Add screenshots
-- Link to your live deployment
-
-This turns your Quest into something you can show employers.
-
----
-
-If you want guidance on any of these paths, please send me a DM and I'll be happy to help!
-
 
