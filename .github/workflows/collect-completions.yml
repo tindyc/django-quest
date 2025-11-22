@@ -18,7 +18,6 @@ jobs:
     env:
       TEMPLATE_OWNER: tindyc
       TEMPLATE_REPO: django-quest
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository (main branch)
@@ -48,7 +47,6 @@ jobs:
         env:
           TEMPLATE_OWNER: ${{ env.TEMPLATE_OWNER }}
           TEMPLATE_REPO: ${{ env.TEMPLATE_REPO }}
-          GH_TOKEN: ${{ env.GH_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
@@ -66,57 +64,66 @@ jobs:
           EARLIEST=""
           LATEST=""
 
-          echo "📚 Fetching repositories generated from template ${TEMPLATE_OWNER}/${TEMPLATE_REPO} ..."
+          echo "🔎 Searching for QUEST_COMPLETION_LOG.md files with Django Quest marker..."
 
-          API_ROOT="https://api.github.com"
           PAGE=1
           ALL_REPOS=""
 
-          # --- Fetch all generated repos via pagination ---
+          # We search public repos owned by TEMPLATE_OWNER that have
+          # QUEST_COMPLETION_LOG.md containing the unique marker.
+          # No Authorization header → global public search works, no PAT needed.
           while :; do
-            GENERATED_URL="${API_ROOT}/repos/${TEMPLATE_OWNER}/${TEMPLATE_REPO}/generated?per_page=100&page=${PAGE}"
+            SEARCH_URL="https://api.github.com/search/code?q=filename:QUEST_COMPLETION_LOG.md+DJANGO_SETUP_QUEST_COMPLETION_TC+user:${TEMPLATE_OWNER}&per_page=100&page=${PAGE}"
 
-            echo "  🔎 Page ${PAGE} – ${GENERATED_URL}"
+            echo "  🔎 Page ${PAGE} – ${SEARCH_URL}"
             RESP=$(
               curl -sS \
-                -H "Authorization: Bearer ${GH_TOKEN}" \
                 -H "Accept: application/vnd.github+json" \
-                "${GENERATED_URL}"
+                "${SEARCH_URL}"
             )
 
-            COUNT=$(echo "$RESP" | jq 'length')
-
-            if [ "$COUNT" -eq 0 ]; then
-              # No more pages
+            # If GitHub returns an error object, show it and stop.
+            if echo "$RESP" | jq -e 'type == "object" and has("message")' >/dev/null 2>&1; then
+              echo "  ⚠️ GitHub API error: $(echo "$RESP" | jq -r '.message')"
               break
             fi
 
-            PAGE_REPOS=$(echo "$RESP" | jq -r '.[].full_name // empty')
-            if [ -n "$PAGE_REPOS" ]; then
-              ALL_REPOS="${ALL_REPOS}"$'\n'"${PAGE_REPOS}"
+            TOTAL_COUNT=$(echo "$RESP" | jq -r '.total_count // 0')
+            PAGE_REPOS=$(echo "$RESP" | jq -r '.items[].repository.full_name // empty' 2>/dev/null || true)
+
+            if [ -z "$PAGE_REPOS" ]; then
+              # No items on this page → stop
+              break
             fi
 
-            PAGE=$((PAGE+1))
+            ALL_REPOS="${ALL_REPOS}"$'\n'"${PAGE_REPOS}"
+
+            # Stop if we've fetched all results
+            if [ $((PAGE * 100)) -ge "$TOTAL_COUNT" ]; then
+              break
+            fi
+
+            PAGE=$((PAGE + 1))
           done
 
           # Normalise and dedupe repo list
           REPOS=$(echo "$ALL_REPOS" | sed '/^\s*$/d' | sort -u || true)
 
           if [ -z "$REPOS" ]; then
-            echo "⚠️ No generated repositories found."
+            echo "⚠️ No completed repositories found via search."
             {
               echo "# 📊 Django Setup Quest – Completion Dashboard"
               echo
-              echo "_Auto-generated from template-generated repositories on ${TS}._"
+              echo "_Auto-generated from code search on ${TS}._"
               echo
               echo "## Summary"
               echo
-              echo "- **Total generated repositories:** 0"
-              echo "- **Total completed repositories:** 0"
+              echo "- **Template repository:** \`${TEMPLATE_OWNER}/${TEMPLATE_REPO}\`"
+              echo "- **Total completed repositories (with logs):** 0"
               echo
               echo "## Completions by Month (UTC)"
               echo
-              echo "_No repositories or completion logs found yet._"
+              echo "_No completion logs found yet._"
               echo
               echo "## Completed Repositories"
               echo
@@ -126,7 +133,7 @@ jobs:
             exit 0
           fi
 
-          echo "✅ Found generated repositories:"
+          echo "✅ Found repositories with completion logs:"
           echo "${REPOS}"
 
           # --- Initialise detail table header ---
@@ -145,7 +152,6 @@ jobs:
 
             CONTENT_JSON=$(
               curl -sS \
-                -H "Authorization: Bearer ${GH_TOKEN}" \
                 -H "Accept: application/vnd.github+json" \
                 "https://api.github.com/repos/${repo}/contents/QUEST_COMPLETION_LOG.md"
             )
@@ -153,7 +159,7 @@ jobs:
             CONTENT_B64=$(echo "$CONTENT_JSON" | jq -r '.content // empty')
 
             if [ -z "$CONTENT_B64" ] || [ "$CONTENT_B64" = "null" ]; then
-              echo "  → ℹ️ No QUEST_COMPLETION_LOG.md found. Skipping."
+              echo "  → ℹ️ No QUEST_COMPLETION_LOG.md found via contents API. Skipping."
               continue
             fi
 
@@ -202,7 +208,6 @@ jobs:
 
             REPO_CREATED_AT=$(
               curl -sS \
-                -H "Authorization: Bearer ${GH_TOKEN}" \
                 -H "Accept: application/vnd.github+json" \
                 "https://api.github.com/repos/${repo}" \
               | jq -r '.created_at // empty'
@@ -245,13 +250,12 @@ jobs:
           {
             echo "# 📊 Django Setup Quest – Completion Dashboard"
             echo
-            echo "_Auto-generated from template-generated repositories on ${TS}._"
+            echo "_Auto-generated from code search on ${TS}._"
             echo
             echo "## 🧾 Summary"
             echo
             echo "- **Template repository:** \`${TEMPLATE_OWNER}/${TEMPLATE_REPO}\`"
-            echo "- **Total generated repositories:** $(echo "${REPOS}" | wc -l | tr -d ' ')"
-            echo "- **Total completed repositories:** ${TOTAL}"
+            echo "- **Total completed repositories (with logs):** ${TOTAL}"
             echo "- **Unique learners (GitHub users):** ${UNIQUE_USERS}"
             if [ -n "$EARLIEST" ]; then
               echo "- **First recorded completion:** ${EARLIEST}"
