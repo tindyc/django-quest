@@ -384,6 +384,58 @@ When your pull request has been **successfully merged**, you must **close this i
 </details>
 
 ------------------------------------------------------------------------
+
+## 📝 Summary
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+### 🌟 What You Did  
+- Updated Python tools  
+- Created & activated a virtual environment  
+- Installed Django  
+- Generated `requirements.txt`
+
+### 🔧 Commands
+
+#### Upgrade tools
+```bash
+python -m pip install --upgrade pip setuptools wheel
+```
+
+#### Create venv
+```bash
+python -m venv venv
+```
+
+#### Activate venv
+```bash
+# macOS / Linux
+source venv/bin/activate
+# Windows PowerShell
+venv\Scripts\Activate.ps1
+# Windows CMD
+venv\Scripts\activate.bat
+```
+
+#### Install Django
+```bash
+pip install django
+```
+
+#### Save dependencies
+```bash
+pip freeze > requirements.txt
+```
+
+#### Optional: Check Django
+```bash
+python -m django --version
+```
+
+</details>
+
+------------------------------------------------------------------------
 ## 🎉 Great work!
 
 You've completed the first step of your Django Quest! Your
