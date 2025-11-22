@@ -183,6 +183,26 @@ When your pull request has been **successfully merged**, you must **close this i
 
 </details>
 
+---
+
+## 📝 Summary
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+### 🌟 What You Did  
+- Created an app  
+- Added it to settings  
+- Confirmed it appears in project structure
+
+### 🔧 Commands
+
+#### Create app
+```bash
+python manage.py startapp <app-name>
+```
+
+</details>
 
 ---
 
