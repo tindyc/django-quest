@@ -5,67 +5,145 @@ title: "Issue 7 – Show Your Data on the Page"
 labels:
   - issue-7
 ---
+# Issue 7 – Show Your Data on the Page
 
-# 📄 Issue 7 – Show Your Data on the Page
+This issue teaches you how to **take data from your Django database and display it on a real web page**.  
+You will also learn how to **create your Issue 7 branch**, **commit your work**, and **open a Pull Request** so the Quest checker can run.
 
-So far you have:
-
-- A Django project and app
-- A model (`Item`) and migrations
-- A superuser and working admin
-
-In this Issue, you will:
-
-- Create some items in the admin
-- Query the database in a view
-- Render the items in a template
+This version includes beginner explanations, notes, diagrams, and clear commands.
 
 ---
 
-## ✅ 1. Add Some Data in the Admin
+## 🧭 What You Have So Far
 
-1. Make sure your server is running:
+You already built:
 
+- A Django project
+- An app
+- A model (`Item`)
+- Migrations & database
+- A superuser & working admin panel
+
+Now you will:
+
+- Add sample data  
+- Query your model in a view  
+- Render it on a webpage using a template  
+- Use a new Issue 7 branch that the checker can detect  
+
+---
+
+# 🔄 0. Update `main` and Create Your Issue 7 Branch
+
+Before starting any issue, always create a fresh branch so the automated checker knows what you are working on.
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b issue-7-show-data
+```
+
+> 💡 Your branch **must** start with `issue-7-`  
+> This lets the Quest checker detect which issue you are completing.
+
+---
+
+# 📊 Diagram: What You Will Build
+
+```
+Browser
+   ↓
+ /items/ URL
+   ↓
+App URL patterns
+   ↓
+item_list view
+   ↓
+Database query (Item.objects.all())
+   ↓
+Template renders HTML
+   ↓
+Browser displays list of items ✔
+```
+
+---
+
+# ✅ 1. Add Some Data From the Admin Panel
+
+We need real data first so we can show it on the page.
+
+1. Start your server:
    ```bash
    python manage.py runserver
    ```
 
 2. Open the admin:
-
    ```
    http://127.0.0.1:8000/admin/
    ```
 
-3. Log in with your superuser account.
-4. Find your **Item** model in the admin.
-5. Click **Add** and create 2–3 items with different names.
+3. Log in using your superuser details.
+
+4. Look for your **Item** model (or whatever model you created).
+
+5. Click **Add** → Create 2–3 items.
+
+> 🎓 **Note:**  
+> You can add as many as you want. These will appear on your website later!
 
 ---
 
-## ✅ 2. Create a View That Uses the Database
+# ✅ 2. Create a View That Queries the Database
 
-Open `<app_name>/views.py` and add a new view:
+Open:
+
+```
+<app_name>/views.py
+```
+
+Add:
 
 ```python
 from django.shortcuts import render
 from .models import Item
-
 
 def item_list(request):
     items = Item.objects.all()  # get all rows from the database
     return render(request, "<app_name>/item_list.html", {"items": items})
 ```
 
-What this does:
+### 🧠 What’s happening?
 
-- `Item.objects.all()` gets all the `Item` objects from the database.
-- `render(...)` sends them to a template as `items`.
+- `Item.objects.all()` asks Django for **every row** in the Item table.
+- `render()` sends them into a template called `item_list.html`.
+- The template will loop over the items and display them.
 
 ---
 
-## ✅ 3. Add a URL for the New View
+## 🧩 Diagram: How the View Works
 
-Open `<app_name>/urls.py` and add a new path:
+```
+item_list view
+      │
+      ├── Item.objects.all()  → Get all items from database
+      │
+      └── render(..., {"items": items})
+                    │
+                    ▼
+            Pass items → template
+```
+
+---
+
+# ✅ 3. Add a URL for the New View
+
+Open:
+
+```
+<app_name>/urls.py
+```
+
+Add the new pattern:
 
 ```python
 from django.urls import path
@@ -77,25 +155,72 @@ urlpatterns = [
 ]
 ```
 
-Now `/items/` will use the `item_list` view.
+Now visiting:
+
+```
+/items/
+```
+
+will run the `item_list` view.
 
 ---
 
-## ✅ 4. Create a Template to Display the Data
+## 🌐 URL Flow Diagram
 
-Create the folder structure:
+```mermaid
+sequenceDiagram
+    Browser->>Project URLs: GET /items/
+    Project URLs->>App URLs: include("<app_name>.urls")
+    App URLs->>Views: item_list()
+    Views->>Database: Item.objects.all()
+    Database-->>Views: QuerySet of items
+    Views-->>Browser: Rendered HTML list
+```
 
-```text
+---
+
+### 1. Browser → Project URLs  
+You visit `/items/`. Django looks at `<project_name>/urls.py`.
+
+### 2. Project URLs → App URLs  
+Your project file includes your app’s URLs:
+
+```python
+path("", include("<app_name>.urls"))
+```
+
+### 3. App URLs → View  
+Your app decides:
+
+```python
+path("items/", views.item_list)
+```
+
+This tells Django to run the function.
+
+### 4. View → Database  
+`Item.objects.all()` fetches the data.
+
+### 5. View → Template → Browser  
+You send the result to a template, and Django renders it.
+
+---
+
+# ✅ 4. Create a Template to Display Your Data
+
+Create the correct folder structure:
+
+```
 <app_name>/
   templates/
     <app_name>/
       item_list.html
 ```
 
-> 💡 For example, if your app is called `main`, the template path will be:
+> 💡 If your app is called `main`, this becomes:  
 > `main/templates/main/item_list.html`
 
-Create `item_list.html`:
+Now create `item_list.html`:
 
 ```html
 <!DOCTYPE html>
@@ -122,32 +247,84 @@ Create `item_list.html`:
 
 ---
 
-## ✅ 5. Test It
+## 🎓 Notes
 
-1. Make sure the server is running:
-
-   ```bash
-   python manage.py runserver
-   ```
-
-2. Open:
-
-   ```
-   http://127.0.0.1:8000/items/
-   ```
-
-You should see a list of item names from the database. 🎉
+- `{% for item in items %}` loops through each database row.
+- `{{ item.name }}` prints the name of each item.
+- `{% if items %}` checks if the database has any items.
 
 ---
 
-## 📝 Notes & Summary
+# 🖥️ 5. Test It
 
-- **View**: queries the database with `Item.objects.all()`
-- **Template**: loops over `items` with `{% for item in items %}`
-- **URL**: connects `/items/` to `item_list` view
+Start your server if it's not already running:
 
-You now have:
+```bash
+python manage.py runserver
+```
 
-- Data stored in the database  
-- Visible on a real page  
-- Updated automatically when you add/change/delete items in the admin  
+Visit:
+
+```
+http://127.0.0.1:8000/items/
+```
+
+You should now see all your database entries listed on a webpage! 🎉
+
+---
+
+# 🔐 6. Commit and Push Your Changes
+
+Add all your new files:
+
+```bash
+git add .
+```
+
+Commit your work:
+
+```bash
+git commit -m "Issue 7 – Show items on a web page"
+```
+
+Push your branch:
+
+```bash
+git push -u origin issue-7-show-data
+```
+
+---
+
+# 🚀 7. Open a Pull Request
+
+1. Go to your GitHub repo.  
+2. You will see a notification offering to create a Pull Request for your new branch.  
+3. Open a PR **into `main`**.  
+4. Title it:
+
+```
+Issue 7 – Show Your Data on the Page
+```
+
+5. Submit the PR and wait for the checker to run.
+
+---
+
+# 📝 Summary
+
+### In this issue you learned:
+
+- How to create and show database items
+- How Django uses URLs → views → templates
+- How to loop through data in a template
+- How to keep work in a clean Git branch
+- How to push changes and submit a Pull Request
+
+### You now have:
+
+- Dynamic data from the database  
+- Displayed on a real page  
+- Automatically updated when you add/edit/delete items  
+- A PR ready for the automated checker 🎉
+
+Great job — you’ve just made your app *come alive*! 🚀
