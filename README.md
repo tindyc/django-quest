@@ -47,15 +47,7 @@ Whether you're building a blog, a to-do app, an online shop, or your own idea �
 - Commit hygiene  
 - Pull Requests  
 - CI checks  
-- Merging safely  
-
-### 📝 GitHub Automation
-- GitHub Issues as tasks  
-- Issue Templates  
-- Automatic Issue sequencing  
-- CI validation  
-- Auto README update on completion  
-
+- Merging safely   
 ---
 
 # ⭐ How to Start the Quest
