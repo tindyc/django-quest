@@ -178,6 +178,28 @@ When your pull request has been **successfully merged**, you must **close this i
 
 </details>
 
+---
+
+## 📝 Summary
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+### 🌟 What You Did  
+- Added a view  
+- Set up URLs  
+- Connected app URLs to project URLs
+
+### 🔧 Example Commands / Files Edited
+
+#### No terminal commands required, except for git commits
+You mainly edited these files:
+
+- `<app-name>/views.py`
+- `<app-name>/urls.py` (you created this)
+- `<project-name>/urls.py`
+
+</details>
 
 ---
 
