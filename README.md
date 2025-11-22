@@ -321,6 +321,14 @@ Good luck ⚡🧙‍♂️
 
 ---
 
+## 📘 Full Django Set up guide
+
+If you’d like a full end-to-end explanation of how a Django project is created — including diagrams and all commands used in the Quest — check out the **Django Setup Guide** in the Wiki.
+
+👉  [![Django Setup Guide](https://img.shields.io/badge/Wiki-Django%20Setup%20Guide-0A66C2?style=for-the-badge)](https://github.com/tindyc/django-quest/wiki/Django-Set-up-Guide)
+
+---
+
 # 🆘 Need Help?
 
 ## 📬 Contact Me on Discord
