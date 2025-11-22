@@ -182,6 +182,33 @@ When your pull request has been **successfully merged**, you must **close this i
 
 ---
 
+## 📝 Summary
+
+<details>
+<summary><strong>Click to expand</strong></summary>
+
+### 🌟 What You Did  
+- Created your first Django model  
+- Made migrations  
+- Applied them  
+- (Optional) Registered model in admin
+
+### 🔧 Commands
+
+#### Make migrations
+```bash
+python manage.py makemigrations
+```
+
+#### Apply migrations
+```bash
+python manage.py migrate
+```
+
+</details>
+
+---
+
 ## 🎉 Your project now has real database schema!
 
 Next: you’ll create a superuser and log into the admin site.
