@@ -75,7 +75,7 @@ Automation cannot begin until Issue 1 exists.
 
 ---
 
-# 🧩 The Quest Loop (You’ll Repeat This for Issues 1–6)
+# 🧩 The Quest Loop
 
 <details>
 <summary><strong>🔁 Click to view</strong></summary>
