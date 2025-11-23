@@ -107,6 +107,26 @@ def blog_list(request):
     return render(request, "<app_name>/blog_list.html", {"posts": posts})
 ```
 
+> ⚠️ Don’t delete your existing `home` view from Issue 4.
+> You are **adding** a new function (`blog_list`), not replacing the file.
+
+Make sure your `views.py` ends up with **both** `home` and `blog_list` – for example:
+
+```python
+from django.http import HttpResponse
+from django.shortcuts import render
+from .models import BlogPost
+
+def home(request):
+    return HttpResponse("Hello from your Django Quest app!")
+
+def blog_list(request):
+    posts = BlogPost.objects.all().order_by("-created_at")
+    return render(request, "blog/blog_list.html", {"posts": posts})
+
+```
+
+
 ### 🧠 What’s happening?
 
 - `BlogPost.objects.all()` → gets all rows from the BlogPost table  
