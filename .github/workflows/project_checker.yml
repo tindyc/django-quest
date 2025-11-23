@@ -160,7 +160,7 @@ jobs:
 
           # Take the first discovered app as the candidate
           FIRST_APP_APPS_PY=$(echo "$APP_MODULES" | head -n 1)
-          APP_DIR=$(dirname "$FIRST_APP_APPS_PY)"
+          APP_DIR=$(dirname "$FIRST_APP_APPS_PY")
           APP_NAME=$(basename "$APP_DIR")
 
           echo "ℹ️ Detected app candidate: '$APP_NAME' (from $FIRST_APP_APPS_PY)"
@@ -173,7 +173,7 @@ jobs:
           fi
 
           echo "✅ App '$APP_NAME' appears to exist and is registered in INSTALLED_APPS."
-
+          
       # ---------------------------------------
       # Issue 4 – URL routing & view
       # ---------------------------------------
