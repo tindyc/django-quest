@@ -10,19 +10,18 @@ labels:
 This issue teaches you how to **take data from your Django database and display it on a real web page**.  
 You will also learn how to **create your Issue 7 branch**, **commit your work**, and **open a Pull Request** so the Quest checker can run.
 
-This version includes beginner explanations, notes, diagrams, and clear commands.
-
+You can build **any project idea** you want — tasks, recipes, notes, products — but the example below uses a **BlogPost** model so you can clearly follow along.
 ---
 
 ## 🧭 What You Have So Far
 
 You already built:
 
-- A Django project
-- An app
-- A model (`Item`)
-- Migrations & database
-- A superuser & working admin panel
+- A Django project & App
+- A `BlogPost` model (or your own model)  
+- A database and migrations  
+- A Django admin panel with superuser created
+- A working homepage  
 
 Now you will:
 
@@ -53,43 +52,38 @@ git checkout -b issue-7-show-data
 ```
 Browser
    ↓
- /items/ URL
+ /posts/ URL
    ↓
 App URL patterns
    ↓
-item_list view
+blog_list view
    ↓
-Database query (Item.objects.all())
+Database query (BlogPost.objects.all())
    ↓
 Template renders HTML
    ↓
-Browser displays list of items ✔
+Browser displays list of posts ✔
 ```
 
 ---
 
-# ✅ 1. Add Some Data From the Admin Panel
+# ✅ 1. Add Some Sample Data (Admin Panel)
 
-We need real data first so we can show it on the page.
-
-1. Start your server:
+1. Run the dev server:
    ```bash
    python manage.py runserver
    ```
 
-2. Open the admin:
+2. Go to:
    ```
    http://127.0.0.1:8000/admin/
    ```
 
-3. Log in using your superuser details.
+3. Log in using your superuser account.
 
-4. Look for your **Item** model (or whatever model you created).
+4. Find **Blog posts** (or your own model name).
 
-5. Click **Add** → Create 2–3 items.
-
-> 🎓 **Note:**  
-> You can add as many as you want. These will appear on your website later!
+5. Add 2–3 posts so we can display them later.
 
 ---
 
@@ -101,36 +95,39 @@ Open:
 <app_name>/views.py
 ```
 
-Add:
+Add the **example BlogPost list view**:
 
 ```python
 from django.shortcuts import render
-from .models import Item
+from .models import BlogPost  # or your own model
 
-def item_list(request):
-    items = Item.objects.all()  # get all rows from the database
-    return render(request, "<app_name>/item_list.html", {"items": items})
+def blog_list(request):
+    posts = BlogPost.objects.all().order_by("-created_at")
+    # Query all rows from the database (newest first)
+    return render(request, "<app_name>/blog_list.html", {"posts": posts})
 ```
 
 ### 🧠 What’s happening?
 
-- `Item.objects.all()` asks Django for **every row** in the Item table.
-- `render()` sends them into a template called `item_list.html`.
-- The template will loop over the items and display them.
+- `BlogPost.objects.all()` → gets all rows from the BlogPost table  
+- `order_by("-created_at")` → newest posts first  
+- The posts are passed into a template using a context dictionary  
+
+If you're building something else, rename the view + variable names to match your model.
 
 ---
 
 ## 🧩 Diagram: How the View Works
 
 ```
-item_list view
+blog_list view
       │
-      ├── Item.objects.all()  → Get all items from database
+      ├── BlogPost.objects.all()  → Query database
       │
-      └── render(..., {"items": items})
+      └── render(..., {"posts": posts})
                     │
                     ▼
-            Pass items → template
+            Template receives data
 ```
 
 ---
@@ -143,7 +140,7 @@ Open:
 <app_name>/urls.py
 ```
 
-Add the new pattern:
+Add the new entry:
 
 ```python
 from django.urls import path
@@ -151,95 +148,69 @@ from . import views
 
 urlpatterns = [
     path("", views.home, name="home"),
-    path("items/", views.item_list, name="item_list"),
+    path("posts/", views.blog_list, name="blog_list"),
 ]
 ```
 
 Now visiting:
 
 ```
-/items/
+/posts/
 ```
 
-will run the `item_list` view.
+will run the `blog_list` view.
 
 ---
 
-## 🌐 URL Flow Diagram
+# 🌐 URL Flow Diagram
 
 ```mermaid
 sequenceDiagram
-    Browser->>Project URLs: GET /items/
+    Browser->>Project URLs: GET /posts/
     Project URLs->>App URLs: include("<app_name>.urls")
-    App URLs->>Views: item_list()
-    Views->>Database: Item.objects.all()
-    Database-->>Views: QuerySet of items
+    App URLs->>Views: blog_list()
+    Views->>Database: BlogPost.objects.all()
+    Database-->>Views: QuerySet of posts
     Views-->>Browser: Rendered HTML list
 ```
 
 ---
 
-### 1. Browser → Project URLs  
-You visit `/items/`. Django looks at `<project_name>/urls.py`.
+# ✅ 4. Create the Template to Display Your Data
 
-### 2. Project URLs → App URLs  
-Your project file includes your app’s URLs:
-
-```python
-path("", include("<app_name>.urls"))
-```
-
-### 3. App URLs → View  
-Your app decides:
-
-```python
-path("items/", views.item_list)
-```
-
-This tells Django to run the function.
-
-### 4. View → Database  
-`Item.objects.all()` fetches the data.
-
-### 5. View → Template → Browser  
-You send the result to a template, and Django renders it.
-
----
-
-# ✅ 4. Create a Template to Display Your Data
-
-Create the correct folder structure:
+Create the folder structure:
 
 ```
 <app_name>/
   templates/
     <app_name>/
-      item_list.html
+      blog_list.html
 ```
 
-> 💡 If your app is called `main`, this becomes:  
-> `main/templates/main/item_list.html`
-
-Now create `item_list.html`:
+Now create `blog_list.html`:
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Items</title>
+    <title>Blog Posts</title>
   </head>
   <body>
-    <h1>Items</h1>
+    <h1>Blog Posts</h1>
 
-    {% if items %}
+    {% if posts %}
       <ul>
-        {% for item in items %}
-          <li>{{ item.name }}</li>
+        {% for post in posts %}
+          <li>
+            <strong>{{ post.title }}</strong><br />
+            <em>{{ post.created_at|date:"F j, Y" }}</em><br />
+            {{ post.content|truncatechars:150 }}
+          </li>
         {% endfor %}
       </ul>
     {% else %}
-      <p>No items found yet.</p>
+      <p>No posts found yet. Add some from the admin panel.</p>
     {% endif %}
   </body>
 </html>
@@ -249,15 +220,16 @@ Now create `item_list.html`:
 
 ## 🎓 Notes
 
-- `{% for item in items %}` loops through each database row.
-- `{{ item.name }}` prints the name of each item.
-- `{% if items %}` checks if the database has any items.
+- `posts` comes from your view  
+- `{% for post in posts %}` loops through the queryset  
+- `{{ post.title }}` prints the field from the model  
+- `truncatechars` shortens long text  
 
 ---
 
-# 🖥️ 5. Test It
+# 🖥️ 5. Test Your Work
 
-Start your server if it's not already running:
+Run:
 
 ```bash
 python manage.py runserver
@@ -266,30 +238,18 @@ python manage.py runserver
 Visit:
 
 ```
-http://127.0.0.1:8000/items/
+http://127.0.0.1:8000/posts/
 ```
 
-You should now see all your database entries listed on a webpage! 🎉
+You should now see your blog posts on a real webpage! 🎉
 
 ---
 
 # 🔐 6. Commit and Push Your Changes
 
-Add all your new files:
-
 ```bash
 git add .
-```
-
-Commit your work:
-
-```bash
-git commit -m "Issue 7 – Show items on a web page"
-```
-
-Push your branch:
-
-```bash
+git commit -m "Issue 7 – Show BlogPost data on a page"
 git push -u origin issue-7-show-data
 ```
 
@@ -297,16 +257,48 @@ git push -u origin issue-7-show-data
 
 # 🚀 7. Open a Pull Request
 
-1. Go to your GitHub repo.  
-2. You will see a notification offering to create a Pull Request for your new branch.  
-3. Open a PR **into `main`**.  
-4. Title it:
+1. Open GitHub  
+2. Create a PR from `issue-7-show-data` → `main`  
+3. Title it:
 
 ```
 Issue 7 – Show Your Data on the Page
 ```
 
-5. Submit the PR and wait for the checker to run.
+4. Create the PR and wait for CI to run.
+
+The CI will run:
+
+- `python manage.py makemigrations --noinput`  
+- `python manage.py migrate --noinput`  
+
+If anything is wrong with your model or migrations, CI will fail and tell you what to fix.
+
+Push updates until it goes green.
+
+---
+
+Once everything is green:
+
+1. Merge your PR  
+2. Close this issue manually  
+
+Closing this issue automatically opens **Issue 8**.
+
+<details>
+<summary><strong>📌 How to Close This Issue </strong></summary>
+
+Closing the pull request is **not enough**.  
+You must close the <em>Issue</em> itself to unlock the next Quest step.
+
+### Steps:
+
+1. Go to **Issues**  
+2. Open this Issue  
+3. Click **Close issue**  
+4. Wait a few seconds — the next Issue will appear  
+
+</details>
 
 ---
 
@@ -314,17 +306,16 @@ Issue 7 – Show Your Data on the Page
 
 ### In this issue you learned:
 
-- How to create and show database items
-- How Django uses URLs → views → templates
-- How to loop through data in a template
-- How to keep work in a clean Git branch
-- How to push changes and submit a Pull Request
+- How to query your model  
+- How to pass data into a template  
+- How to loop over objects in HTML  
+- How Django routes: URLs → Views → Templates  
+- How to prepare a clean PR for the automated checker  
 
 ### You now have:
 
-- Dynamic data from the database  
-- Displayed on a real page  
-- Automatically updated when you add/edit/delete items  
-- A PR ready for the automated checker 🎉
+- Real database content  
+- Displayed dynamically on a webpage  
+- A working PR ready for Issue 8 🎉
 
-Great job — you’ve just made your app *come alive*! 🚀
+Great job — your Django project is coming alive! 🚀
