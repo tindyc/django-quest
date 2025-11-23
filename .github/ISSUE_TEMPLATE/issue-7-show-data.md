@@ -227,9 +227,18 @@ Now create `blog_list.html`:
       <ul>
         {% for post in posts %}
           <li>
-            <strong>{{ post.title }}</strong><br />
-            <em>{{ post.created_at|date:"F j, Y" }}</em><br />
-            {{ post.content|truncatechars:150 }}
+            <h2>
+              <a href="{% url 'blog_detail' post.id %}">
+                {{ post.title }}
+              </a>
+            </h2>
+            <p>
+              <em>{{ post.created_at|date:"F j, Y" }}</em>
+            </p>
+            <p>
+              {{ post.content|truncatechars:120 }}
+              <a href="{% url 'blog_detail' post.id %}">Read more →</a>
+            </p>
           </li>
         {% endfor %}
       </ul>
