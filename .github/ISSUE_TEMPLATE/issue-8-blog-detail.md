@@ -11,7 +11,7 @@ labels:
 In this issue, you will make each blog post clickable so it opens on **its own page** with a dynamic URL like:
 
 ```
-/blog/3/
+http://127.0.0.1:8000/blog/3/
 ```
 
 You can follow the **BlogPost** example below, or adapt it to any model you created.
@@ -211,7 +211,7 @@ python manage.py runserver
 1. Visit:
 
 ```
-/blog/
+http://127.0.0.1:8000/blog/
 ```
 
 2. Click any post title  
