@@ -95,37 +95,40 @@ Open:
 <app_name>/views.py
 ```
 
-Add the **example BlogPost list view**:
+Add the example BlogPost list view.
 
-```python
-from django.shortcuts import render
-from .models import BlogPost  # or your own model
+>> ⚠️ Important: Don’t delete your existing home view from Issue 4.
+>> You are adding a new function (blog_list), not replacing the file.
 
-def blog_list(request):
-    posts = BlogPost.objects.all().order_by("-created_at")
-    # Query all rows from the database (newest first)
-    return render(request, "<app_name>/blog_list.html", {"posts": posts})
-```
-
-> ⚠️ Don’t delete your existing `home` view from Issue 4.
-> You are **adding** a new function (`blog_list`), not replacing the file.
-
-Make sure your `views.py` ends up with **both** `home` and `blog_list` – for example:
+Your views.py should end up looking roughly like this:
 
 ```python
 from django.http import HttpResponse
 from django.shortcuts import render
-from .models import BlogPost
+from .models import BlogPost  # or your own model
 
 def home(request):
+    # This is the view you created in Issue 4.
     return HttpResponse("Hello from your Django Quest app!")
 
 def blog_list(request):
+    # Show a list of all blog posts.
     posts = BlogPost.objects.all().order_by("-created_at")
+    # 'objects' is the model manager. '.all()' returns all rows from the DB.
+    # '.order_by("-created_at")' sorts newest first.
+
     return render(request, "blog/blog_list.html", {"posts": posts})
 
 ```
-
+>> 🔁 If your app is not called blog
+>> If your app is named something else (for example main), update:
+```
+return render(request, "blog/blog_list.html", {"posts": posts})
+```
+to
+```
+return render(request, "<app_name>/blog_list.html", {"posts": posts})
+```
 
 ### 🧠 What’s happening?
 
@@ -167,15 +170,16 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.home, name="home"),
-    path("posts/", views.blog_list, name="blog_list"),
+    path("", views.home, name="home"),          # homepage from Issue 4
+    path("blog/", views.blog_list, name="blog_list"),  # new list page
 ]
+
 ```
 
 Now visiting:
 
 ```
-/posts/
+/blog/
 ```
 
 will run the `blog_list` view.
@@ -258,11 +262,15 @@ python manage.py runserver
 Visit:
 
 ```
-http://127.0.0.1:8000/posts/
+http://127.0.0.1:8000/blog/
 ```
 
 You should now see your blog posts on a real webpage! 🎉
 
+>> If you get an error like:
+
+AttributeError: module 'blog.views' has no attribute 'home'
+→ Check that both home and blog_list are defined in views.py, and that your urlpatterns still reference views.home.
 ---
 
 # 🔐 6. Commit and Push Your Changes
@@ -329,7 +337,7 @@ You must close the <em>Issue</em> itself to unlock the next Quest step.
 - How to query your model  
 - How to pass data into a template  
 - How to loop over objects in HTML  
-- How Django routes: URLs → Views → Templates  
+- How Django routes: URLs → Views → Templates → Brower
 - How to prepare a clean PR for the automated checker  
 
 ### You now have:
