@@ -8,7 +8,6 @@ jobs:
   open_next_issue:
     runs-on: ubuntu-latest
 
-    # Permissions: can read repo and create issues
     permissions:
       contents: read
       issues: write
@@ -20,57 +19,69 @@ jobs:
       - name: Show closed issue info
         run: |
           echo "Closed issue: #${{ github.event.issue.number }}"
-          echo "Title: ${{ github.event.issue.title }}"
+          echo "Title: >>>${{ github.event.issue.title }}<<<"
 
-      - name: Determine next issue by TITLE
+      - name: Determine next issue based on TITLE (Unicode-safe)
         id: next
         shell: bash
+        env:
+          TITLE: ${{ github.event.issue.title }}
         run: |
-          TITLE="${{ github.event.issue.title }}"
+          echo "DEBUG RAW TITLE:"
+          printf '%q\n' "$TITLE"
 
           NEXT_TITLE=""
           NEXT_FILE=""
           NEXT_LABEL=""
           FINISH_QUEST="false"
 
-          # Logic relies on Issue Title starting with "Issue X"
-          if [[ "$TITLE" == "Issue 1"* ]]; then
+          # Match "Issue X" robustly, regardless of spaces/dashes/punctuation
+          if [[ "$TITLE" =~ ^Issue[[:space:]]*1([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 2 – Project Core: Create Project Structure"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-2-project-core.md"
             NEXT_LABEL="issue-2"
-          elif [[ "$TITLE" == "Issue 2"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*2([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 3 – App Creation & Registration"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-3-app-and-registration.md"
             NEXT_LABEL="issue-3"
-          elif [[ "$TITLE" == "Issue 3"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*3([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 4 – URL Routing & View Test"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-4-url-and-view.md"
             NEXT_LABEL="issue-4"
-          elif [[ "$TITLE" == "Issue 4"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*4([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 5 – Models & Migrations"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-5-models-and-templates.md"
             NEXT_LABEL="issue-5"
-          elif [[ "$TITLE" == "Issue 5"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*5([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 6 – Superuser & Admin"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-6-superuser.md"
             NEXT_LABEL="issue-6"
-          elif [[ "$TITLE" == "Issue 6"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*6([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 7 – Show Your Data on the Page"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-7-show-data.md"
             NEXT_LABEL="issue-7"
-          elif [[ "$TITLE" == "Issue 7"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*7([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 8 – Add a Blog Post Detail Page"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-8-blog-detail.md"
             NEXT_LABEL="issue-8"
-          elif [[ "$TITLE" == "Issue 8"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*8([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 9 – Template Inheritance & Base Layout"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-9-template-inheritance.md"
             NEXT_LABEL="issue-9"
-          elif [[ "$TITLE" == "Issue 9"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*9([^0-9]|$) ]]; then
             NEXT_TITLE="Issue 10 – Quest Complete & Reflection"
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-10-quest-complete.md"
             NEXT_LABEL="issue-10"
-          elif [[ "$TITLE" == "Issue 10"* ]]; then
+
+          elif [[ "$TITLE" =~ ^Issue[[:space:]]*10([^0-9]|$) ]]; then
             FINISH_QUEST="true"
           fi
 
@@ -79,11 +90,11 @@ jobs:
           echo "next_label=$NEXT_LABEL" >> "$GITHUB_OUTPUT"
           echo "finish_quest=$FINISH_QUEST" >> "$GITHUB_OUTPUT"
 
-      - name: Stop if no action is needed
+      - name: Stop if nothing to create
         if: steps.next.outputs.next_title == '' && steps.next.outputs.finish_quest == 'false'
-        run: echo "✅ No next issue to create."
+        run: echo "No next issue to create."
 
-      - name: Checkout repository for Issue Creation
+      - name: Checkout repo
         if: steps.next.outputs.next_title != ''
         uses: actions/checkout@v4
 
@@ -105,94 +116,38 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout repository for README update
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Add Congratulations Message to README.md
-        shell: bash
+      - name: Add congratulations to README
         run: |
-          CONGRATS_MESSAGE=$(cat <<-'EOF'
+          cat << 'EOF' > /tmp/CONGRATS_BLOCK.md
           <div align="center">
 
           # 🎉 Django Quest Complete!
 
-          [![Quest Status: Completed](https://img.shields.io/badge/Quest%20Status-Completed-4caf50?style=for-the-badge&logo=django&logoColor=white)](#-quest-complete-congratulations-)
+          [![Quest Status: Completed](https://img.shields.io/badge/Quest%20Status-Completed-4caf50?style=for-the-badge&logo=django&logoColor=white)]()
 
-          **You’ve successfully completed the entire Django Quest Workshop.**  
-          Your project is now a solid foundation to build your full Django application.
+          **You’ve successfully completed the entire Django Quest Workshop.**
 
           </div>
 
           ---
 
-          ### ✅ What you’ve achieved
-
-          - Set up a Python virtual environment and installed Django  
-          - Created and configured your Django project  
-          - Built your first Django app and wired up URLs & views  
-          - Defined models and ran migrations  
-          - Created a superuser and explored the Django admin  
-          - Use templates and inheritance 
-
-          ---
-
-          ### 🚀 Next steps
-
-          1. **Run the project locally**
-
-             ```bash
-             python manage.py runserver
-             ```
-
-          2. **Log into the admin**
-
-             - Visit: `http://127.0.0.1:8000/admin/`
-             - Log in with your superuser credentials
-
-          3. **Keep building**
-
-             - Add more models, views, and templates  
-             - Customize the admin  
-             - Start shaping this into your real application ✨
-
-          ---
-
-          <details>
-          <summary><strong>💡 Not sure what to build next?</strong></summary>
-
-          - A personal blog or portfolio  
-          - A simple task manager / to-do app  
-          - A small catalog (books, games, recipes, anything!)  
-          - A learning journal to track what you build next  
-
-          </details>
           EOF
-          )
+          cat /tmp/CONGRATS_BLOCK.md README.md > README.tmp
+          mv README.tmp README.md
 
-          # Prepend congratulations to the TOP of README.md
-          { printf "%s\n\n" "$CONGRATS_MESSAGE"; cat README.md; } > README.tmp && mv README.tmp README.md
-
-      - name: Record completion in QUEST_COMPLETION_LOG.md
-        shell: bash
+      - name: Record completion
         run: |
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           {
             echo "## Django Setup Quest Completion"
-            echo ""
-            echo "MARKER: DJANGO_SETUP_QUEST_COMPLETION_TC"
-            echo ""
-            echo "- **Quest ID:** django-setup-quest-tc"
-            echo "- **User:** @${{ github.actor }}"
-            echo "- **Repository:** https://github.com/${{ github.repository }}"
-            echo "- **Workflow Run:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "- **Completed at (UTC):** ${TIMESTAMP}"
-            echo ""
+            echo "- Completed by @${{ github.actor }} on $(date -u)"
             echo "---"
-            echo ""
           } >> QUEST_COMPLETION_LOG.md
 
-      - name: Commit and Push README changes
+      - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'docs: Celebrate completion of Django Quest workshop!'
+          commit_message: "docs: Celebrate Django Quest completion"
           branch: main
