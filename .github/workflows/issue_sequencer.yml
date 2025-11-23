@@ -55,6 +55,22 @@ jobs:
             NEXT_FILE=".github/ISSUE_TEMPLATE/issue-6-superuser.md"
             NEXT_LABEL="issue-6"
           elif [[ "$TITLE" == "Issue 6"* ]]; then
+            NEXT_TITLE="Issue 7 – Show Data on Page"
+            NEXT_FILE=".github/ISSUE_TEMPLATE/issue-7-show-data.md"
+            NEXT_LABEL="issue-7"
+          elif [[ "$TITLE" == "Issue 7"* ]]; then
+            NEXT_TITLE="Issue 8 – Show Blog Posts on a Page"
+            NEXT_FILE=".github/ISSUE_TEMPLATE/issue-8-show-blog-posts-on-a-page.md"
+            NEXT_LABEL="issue-8"
+          elif [[ "$TITLE" == "Issue 8"* ]]; then
+            NEXT_TITLE="Issue 9 – Add Blog Post Detail Page"
+            NEXT_FILE=".github/ISSUE_TEMPLATE/issue-9-add-blog-post-detail-page.md"
+            NEXT_LABEL="issue-9"
+          elif [[ "$TITLE" == "Issue 9"* ]]; then
+            NEXT_TITLE="Issue 10 – Quest Complete & Reflection"
+            NEXT_FILE=".github/ISSUE_TEMPLATE/issue-10-quest-complete.md"
+            NEXT_LABEL="issue-10"
+          elif [[ "$TITLE" == "Issue 10"* ]]; then
             FINISH_QUEST="true"
           fi
 
