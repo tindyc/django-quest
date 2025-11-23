@@ -33,7 +33,8 @@ jobs:
         shell: bash
         run: |
           BRANCH="${{ env.BRANCH_NAME }}"
-          if [[ "$BRANCH" =~ ^issue-([1-6])-.+ ]]; then
+          # Support issue-1-... up to issue-10-...
+          if [[ "$BRANCH" =~ ^issue-([1-9]|10)-.+ ]]; then
             ISSUE="${BASH_REMATCH[1]}"
             echo "✅ Detected Issue Branch: Issue $ISSUE"
             echo "valid=true" >> "$GITHUB_OUTPUT"
@@ -159,7 +160,7 @@ jobs:
 
           # Take the first discovered app as the candidate
           FIRST_APP_APPS_PY=$(echo "$APP_MODULES" | head -n 1)
-          APP_DIR=$(dirname "$FIRST_APP_APPS_PY")
+          APP_DIR=$(dirname "$FIRST_APP_APPS_PY)"
           APP_NAME=$(basename "$APP_DIR")
 
           echo "ℹ️ Detected app candidate: '$APP_NAME' (from $FIRST_APP_APPS_PY)"
@@ -213,18 +214,51 @@ jobs:
           echo "✅ migrate completed successfully."
 
       # ---------------------------------------
-      # Issue 6 – Project health (Final Check)
+      # Issue 6 – Project health (System check)
       # ---------------------------------------
-      - name: Django system check (Issue 6 Check)
+      - name: Django system check (Issue 6+ Check)
         if: |
           steps.issue_info.outputs.valid == 'true' &&
           fromJSON(steps.issue_info.outputs.issue_number) >= 6
         shell: bash
         run: |
-          echo "🔎 Running 'python manage.py check' (Issue 6)…"
+          echo "🔎 Running 'python manage.py check' (Issue 6 and later)…"
           set -e
           python manage.py check
           echo "✅ Django system check passed."
+
+      # ---------------------------------------
+      # Issue 7–9 – Manual feature checks (generic)
+      # ---------------------------------------
+      - name: Manual feature reminders (Issues 7–9)
+        if: |
+          steps.issue_info.outputs.valid == 'true' &&
+          fromJSON(steps.issue_info.outputs.issue_number) >= 7 &&
+          fromJSON(steps.issue_info.outputs.issue_number) <= 9
+        shell: bash
+        run: |
+          echo "ℹ️ Automated Django health checks passed."
+          echo "For Issues 7–9, also manually verify in your browser that:"
+          echo "  - Your main page (or the page you built in this issue) loads without errors."
+          echo "  - It displays data from your own model/app (for example: a list, table, or cards of objects)."
+          echo "  - Any links or buttons you added to view more details actually work and load a page."
+          echo "  - Detail pages (if you created them) show the correct information for a single object."
+          echo ""
+          echo "These behaviour checks depend on your own model and app design, so they are not fully"
+          echo "automated here — but they are required to complete the Quest steps."
+
+      # ---------------------------------------
+      # Issue 10 – Quest wrap-up (no extra checks)
+      # ---------------------------------------
+      - name: Issue 10 – Quest wrap-up note
+        if: |
+          steps.issue_info.outputs.valid == 'true' &&
+          fromJSON(steps.issue_info.outputs.issue_number) == 10
+        shell: bash
+        run: |
+          echo "🎓 This is Issue 10 – Quest Complete & Reflection."
+          echo "There are no extra automated checks for this issue."
+          echo "Use this PR to review your work, tidy anything up, then merge to finish the Quest!"
 
       # ---------------------------------------
       # Final friendly summary
