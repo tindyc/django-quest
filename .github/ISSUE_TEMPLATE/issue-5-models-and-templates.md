@@ -33,29 +33,42 @@ Activate your virtual environment if needed.
 ## 🧱 2. Add a model in `models.py`
 
 Open your app’s `models.py`, e.g. `blog/models.py`, and add a simple model.  
+
+```
+blog/models.py
+```
+
 Here’s an example for a blog post; adapt the names to your idea if you like:
 
 ```python
-from django.db import models
+from django.db import models  # import Django's model base classes
 
-class Post(models.Model):
+class BlogPost(models.Model):
+    # A simple blog post model example.
+    # Each instance (row) represents one blog post.
     title = models.CharField(max_length=200)
-    body = models.TextField()
+    content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        # This controls how the object is shown in the admin
+        # and in other places. We return the title.
         return self.title
 ```
 
-Notes:
+### 💡 What this model represents
 
-- `CharField` needs a `max_length`.
-- `auto_now_add=True` records creation time automatically.
-- `__str__` helps display objects nicely in the admin and shell.
+- Each **BlogPost** object is a row in your database.
+- `title`: short text (needs a `max_length`).
+- `content`: long text (no length limit).
+- `created_at`: automatically stores the date & time when the post was created.
+- `__str__`: makes objects look nice in admin and shell.
+
+If you chose a different app name, the file path and import will adjust automatically.
 
 ---
 
-## 🧪 3. Run `makemigrations`
+## 🧪 3. Generate migrations
 
 Run:
 
@@ -74,7 +87,7 @@ If you get errors, read them carefully — they usually point to a syntax issue 
 
 ---
 
-## 🧱 4. Apply migrations with `migrate`
+## 🧱 4. Apply migrations
 
 Run:
 
@@ -86,7 +99,7 @@ This applies all unapplied migrations (including your new one) to the database.
 
 ---
 
-## 🧾 5. (Optional but recommended) Register your model in `admin.py`
+## 🧾 5. Register your model in `admin.py`
 
 Open your app’s `admin.py` and register your model:
 
@@ -185,22 +198,23 @@ When your pull request has been **successfully merged**, you must **close this i
 ## 📝 Summary
 
 <details>
-<summary><strong>Click to expand</strong></summary>
+<summary><strong>Click to expand summary</strong></summary>
 
-### 🌟 What You Did  
-- Created your first Django model  
-- Made migrations  
-- Applied them  
-- (Optional) Registered model in admin
+### 🌟 You completed:
 
-### 🔧 Commands
+- Creating your first Django model  
+- Generating migrations  
+- Applying them to your database  
+- Integrating with Django admin  
 
-#### Make migrations
+### Key commands:
+
+#### Create migration files
 ```bash
 python manage.py makemigrations
 ```
 
-#### Apply migrations
+#### Apply migrations to the database
 ```bash
 python manage.py migrate
 ```
@@ -209,6 +223,6 @@ python manage.py migrate
 
 ---
 
-## 🎉 Your project now has real database schema!
+## 🎉 Fantastic work! Your project now has real database structure.
 
-Next: you’ll create a superuser and log into the admin site.
+Next: you’ll create a superuser and explore the Django admin.
