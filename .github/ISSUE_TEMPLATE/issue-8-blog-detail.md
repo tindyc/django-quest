@@ -74,7 +74,7 @@ Open:
 <app_name>/views.py
 ```
 
-Add the import:
+Add the required import **(this prevents a NameError)**:
 
 ```python
 from django.shortcuts import get_object_or_404
@@ -91,6 +91,29 @@ def blog_detail(request, post_id):
 
     return render(request, "<app_name>/blog_detail.html", context)
 ```
+
+Your views.py should now look like this:
+```python
+from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404
+from .models import BlogPost
+
+def home(request):
+    return HttpResponse("Hello from your Django Quest app!")
+
+def blog_list(request):
+    posts = BlogPost.objects.all().order_by("-created_at")
+    return render(request, "blog/blog_list.html", {"posts": posts})
+
+def blog_detail(request, post_id):
+    post = get_object_or_404(BlogPost, id=post_id)
+    return render(request, "blog/blog_detail.html", {"post": post})
+```
+
+>> 🔁 If your app is not called blog, update both template paths:
+
+``"blog/blog_list.html"`` → ``"<app_name>/blog_list.html"``
+``"blog/blog_detail.html"`` → ``"<app_name>/blog_detail.html"``
 
 ### 🧠 Why `get_object_or_404`?
 
