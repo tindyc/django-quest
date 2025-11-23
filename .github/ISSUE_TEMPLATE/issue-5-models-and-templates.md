@@ -35,7 +35,7 @@ Activate your virtual environment if needed.
 Open your app’s `models.py`, e.g. `blog/models.py`, and add a simple model.  
 
 ```
-blog/models.py
+<app_name>/models.py
 ```
 
 Here’s an example for a blog post; adapt the names to your idea if you like:
@@ -102,6 +102,14 @@ This applies all unapplied migrations (including your new one) to the database.
 ## 🧾 5. Register your model in `admin.py`
 
 Open your app’s `admin.py` and register your model:
+
+Open:
+
+```bash
+<app_name>/admin.py
+```
+
+Add:
 
 ```python
 from django.contrib import admin
