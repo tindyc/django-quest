@@ -325,7 +325,7 @@ If you’d like a full end-to-end explanation of how a Django project is created
 
 All help and Q&A happens in **GitHub Discussions** for this repo.
 
-👉 [Go to Discussions](https://github.com/YOUR-USERNAME/YOUR-REPO/discussions)
+👉 [Go to Discussions](https://github.com/tindyc/django-quest/discussions)
 
 Use:
 - **General** – Chat about anything related to this Quest.
