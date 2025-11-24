@@ -321,7 +321,18 @@ If you’d like a full end-to-end explanation of how a Django project is created
 
 ---
 
-# 🆘 Need Help?
+## 💬 Need Help or Want to Ask Questions?
+
+All help and Q&A happens in **GitHub Discussions** for this repo.
+
+👉 [Go to Discussions](https://github.com/YOUR-USERNAME/YOUR-REPO/discussions)
+
+Use:
+- **General** – Chat about anything related to this Quest.
+- **Help & Support** – if you're stuck on a Quest issue or wiki step  
+- **Django & Python Concepts** – to ask about explanations in the wiki  
+- **Quest & Wiki Feedback** – to suggest improvements  
+- **Show Your Project** – to share what you built 🎉
 
 ## 📬 Contact Me on Discord
 
