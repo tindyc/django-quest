@@ -1,6 +1,9 @@
 # 🚀 The Django Quest  
 Wellcome to Django Quest. Build Your First Django Project!
 
+![Use Template – 🚀](https://img.shields.io/badge/Use_this_Template-🚀_Do_NOT_Fork!-1db660?style=for-the-badge&logo=github)
+
+
 > ⚠️ **Important:**  
 > This repository is a **Template** for the Django Quest.  
 > **Do not** clone or fork this repo to do the exercises.  
